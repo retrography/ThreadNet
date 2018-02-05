@@ -1,4 +1,4 @@
-##########################################################################################################
+ ##########################################################################################################
 # THREADNET Misc functions
 
 # This software may be used according to the terms provided in the
@@ -19,31 +19,50 @@
 #'
 #' @examples
 read_occurrences <- function(inFile){
-
   # if it's null return null, otherwise do the whole thing...
   if (is.null(inFile))
     return(NULL)
 
-  # read in the table of occurrences
-  o=read.csv(inFile$datapath)
+  # run xes file
+  fileType= file_ext(inFile$datapath)
+  if (fileType=='xes')
+    {{
+    # read in the table of occurrences
+    o=read_xes(inFile$datapath)
+    if (any(match(colnames(o),"timestamp"))) {
+      colnames(o)[colnames(o)=="timestamp"] <- "tStamp"}
+    else {return(NULL)}
+
+    # clean up the data -- remove blanks, etc.
+    o = cleanOcc(o,cfnames(o))
+
+    return(o)}
+    }
+
+  else
+    {{
+      # read in the table of occurrences
+      o=read.csv(inFile$datapath)
 
 
-  # check the file format.  Put in humorous example if the format is bad
-   if (check_file_format(o)=="badformat")
-   {o=make_example_DF() }
-  else if (check_file_format(o)=="sequence")
-  {o=add_relative_timestamps(o,"sequence", 1) }
+    # check the file format.  Put in humorous example if the format is bad
+      if (check_file_format(o)=="badformat")
+        {o=make_example_DF() }
+      else if (check_file_format(o)=="sequence")
+        {o=add_relative_timestamps(o,"sequence", 1) }
 
-  # clean up the data -- remove blanks, etc.
-  o = cleanOcc(o,cfnames(o))
+    # clean up the data -- remove blanks, etc.
+      o = cleanOcc(o,cfnames(o))
+      return(o)}
+    }
+  }
 
-  return(o)}
 
 # This could be improved but is an important logical checkpoint
 # just checks that a required field is in the first column
 check_file_format = function(o){
 
-  if ((colnames(o)[1] == "tStamp"))
+  if ((colnames(o)[1] == "timestamp"))
   {return("tStamp")}
 
   else if ((colnames(o)[1] == "sequence"))
@@ -116,8 +135,8 @@ cleanOcc = function(o, cfnames){
  # o <- as.data.frame(lapply(o, addOther))
 
   # add weekday and month
-  o$weekday = as.factor(weekdays(as.Date(o$tStamp)))
-  o$month = as.factor(months(as.Date(o$tStamp)))
+  # o$weekday = as.factor(weekdays(as.Date(o$tStamp)))
+  # o$month = as.factor(months(as.Date(o$tStamp)))
 
   return(o)
 }
@@ -453,8 +472,4 @@ common_events <- function(ss1, ss2, TN, CF, n){
 rr_grams <- function(o,TN, CF, N, R) {
   # N - max length of ngram
   # R = threshold for repetition
-
-
-
-
-}
+  }
