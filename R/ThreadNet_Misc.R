@@ -44,7 +44,6 @@ read_occurrences <- function(inFile){
       # read in the table of occurrences
       o=read.csv(inFile$datapath)
 
-
     # check the file format.  Put in humorous example if the format is bad
       if (check_file_format(o)=="badformat")
         {o=make_example_DF() }
@@ -62,7 +61,7 @@ read_occurrences <- function(inFile){
 # just checks that a required field is in the first column
 check_file_format = function(o){
 
-  if ((colnames(o)[1] == "timestamp"))
+  if ((colnames(o)[1] == "tStamp" || "timestamp"))
   {return("tStamp")}
 
   else if ((colnames(o)[1] == "sequence"))

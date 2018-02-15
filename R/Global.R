@@ -22,7 +22,7 @@ library(xesreadR)
 library(colorspace)
 library(igraph)
 library(TraMineR)
-
+library(tools)
 # this is another change
 
 # source("ThreadNet_Core.R")
