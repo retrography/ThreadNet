@@ -26,21 +26,16 @@ read_occurrences <- function(inFile){
   # run xes file
   fileType= file_ext(inFile$datapath)
   if (fileType=='xes')
-    {{
+    {
     # read in the table of occurrences
-    o=read_xes(inFile$datapath)
+    o=as.data.frame(read_xes(inFile$datapath))
     if (any(match(colnames(o),"timestamp"))) {
       colnames(o)[colnames(o)=="timestamp"] <- "tStamp"}
     else {return(NULL)}
-
-    # clean up the data -- remove blanks, etc.
-    o = cleanOcc(o,cfnames(o))
-
-    return(o)}
     }
 
   else
-    {{
+    {
       # read in the table of occurrences
       o=read.csv(inFile$datapath)
 
@@ -50,10 +45,11 @@ read_occurrences <- function(inFile){
       else if (check_file_format(o)=="sequence")
         {o=add_relative_timestamps(o,"sequence", 1) }
 
-    # clean up the data -- remove blanks, etc.
-      o = cleanOcc(o,cfnames(o))
-      return(o)}
     }
+
+  # clean up the data -- remove blanks, etc.
+  o = cleanOcc(o,cfnames(o))
+  return(o)
   }
 
 
@@ -61,10 +57,10 @@ read_occurrences <- function(inFile){
 # just checks that a required field is in the first column
 check_file_format = function(o){
 
-  if ((colnames(o)[1] == "tStamp" || "timestamp"))
+  if (colnames(o)[1] == "tStamp")
   {return("tStamp")}
 
-  else if ((colnames(o)[1] == "sequence"))
+  else if (colnames(o)[1] == "sequence")
   {return("sequence")}
 
   else
@@ -86,7 +82,7 @@ check_file_format = function(o){
 #' @examples
 add_relative_timestamps <- function(o, SN, tstep=1){
 
-  startTime <- as.POSIXlt("2017-01-01 00:00:00")
+  startTime <- as.POSIXlt("2017-01-01 00:00:00", tz="GMT")
 
   # add the column at the beginning
   o <- cbind(startTime + 60*as.numeric(as.character(o[[SN]])), o)
@@ -472,3 +468,5 @@ rr_grams <- function(o,TN, CF, N, R) {
   # N - max length of ngram
   # R = threshold for repetition
   }
+
+
