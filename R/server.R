@@ -114,7 +114,7 @@ server <- shinyServer(function(input, output, session) {
 
   output$Data_Tab_Output_2  = DT::renderDataTable({
     selectOcc()
-  }, filter = "top")
+  }, filter = "top", options=list(autoWidth = TRUE))
 
 
   ##################### 2.POV  tab ################################
