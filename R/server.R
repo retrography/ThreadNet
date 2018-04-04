@@ -111,6 +111,10 @@ server <- shinyServer(function(input, output, session) {
 
   ################## 1.READ DATA TAB ####################
 
+  output$Data_Tab_Help = renderUI({
+    tags$div(align="right",
+             tags$h4(tags$a( href = paste0( getwd(),'/inst/helpFiles/Read_Data_Help.htm'),'Help for Read Data')) )
+    })
   output$Data_Tab_Controls_1 =  renderUI({
     tags$div(align="center",
              fileInput("file1",
@@ -183,6 +187,7 @@ server <- shinyServer(function(input, output, session) {
                        cfnames(selectOccFilter()),
                        selected =  get_THREAD_CF(),
                        inline=TRUE)
+
   })
 
   output$POV_Tab_Controls_3 <- renderUI({
@@ -660,9 +665,8 @@ output$Visualize_Tab_Controls_1 = renderUI({
 
 
   ############################  Explantory tool tips ##############################
-  # requires package shinybs
-  # addTooltip(session, "PctOccToDisplayID", "For large data sets, this can be helpful", placement = "bottom", trigger = "hover",
-  #            options = NULL)
+  # requires package shinyBS
+
 
 
 })

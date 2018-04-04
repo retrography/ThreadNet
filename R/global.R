@@ -9,6 +9,8 @@
 # 15 October Point of view code has solidified somewhat
 # 20 October Starting on NetworkD3
 
+# Global variables, config settings, etc. can be defined here
+
 library(shiny)
 library(plotly)
 library(tidyverse)
@@ -24,14 +26,11 @@ library(DT)
 library(RColorBrewer)
 library(lubridate)
 
-# this is another change
-
 source("ThreadNet_Core.R")
 source("ThreadNet_Misc.R")
 source("ThreadNet_Graphics.R")
 source("ThreadNet_Metrics.R")
 
-# Global variables, config settings, etc. can be defined here
 
 # This is where we store the list of event mappings.  Reactive bindings are added in server.R
 GlobalEventMappings <<-list()

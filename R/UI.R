@@ -19,8 +19,10 @@ ui <- fluidPage(
 
   tabsetPanel(type = "tabs",
               tabPanel("Read Data",
+                       uiOutput("Data_Tab_Help"),
                        uiOutput("Data_Tab_Controls_1"),
                        uiOutput("Data_Tab_Controls_2"),
+                       hr(),
                        DT::dataTableOutput("Data_Tab_Output_2")
               ),
               tabPanel("Choose POV",
