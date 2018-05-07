@@ -58,6 +58,21 @@ check_file_format = function(o){
   {return("badformat")}
 }
 
+#' Checks the name attempting to be create against the list of
+#' map names in memory and forces the creation of a new name.
+#'
+#' @param mapname name of map attempting to be created
+
+check_map_name = function(mapname){
+    if (mapname %in% get_event_mapping_name_list()){
+      existingMap = TRUE
+    } else {
+      existingMap = FALSE
+    }
+    return(existingMap)
+  }
+
+
 #' Add relative timestamps
 #'
 #' This function uses the sequence numbers to add a column with time stamp to the data, so that it can be used throughout the rest
