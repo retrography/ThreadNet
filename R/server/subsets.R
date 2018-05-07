@@ -62,7 +62,8 @@ output$chunk_controls_5 <- renderUI({
 	tags$div(
 		align = "left",
 		textInput("EventMapName2", label = h4("Enter label to save result")),
-		actionButton("EventButton2", "Create New Mapping")
+		actionButton("EventButton2", "Create New Mapping"),
+		span(textOutput("EventValidate2"), style="color:red")
 	)
 })
 
@@ -84,7 +85,7 @@ output$chunk_controls_7 <- renderText({
 			get_Zoom_CHUNK(),
 			','
 		)[input$chunkVerbatimRows[1]:input$chunkVerbatimRows[2]],
-		'\n' 
+		'\n'
 	)
 })
 
@@ -167,7 +168,8 @@ output$Regular_Expression_controls_7 <- renderUI({
 		align="left",
 		textInput("EventMapName3", label = h4("Enter label to save result"), value = ""),
 		radioButtons("KeepIrregularEvents",label = h4("Keep irregular events:"), choices = c('Keep', 'Drop'), inline = TRUE),
-		actionButton("EventButton3", "Create New Mapping")
+		actionButton("EventButton3", "Create New Mapping"),
+		span(textOutput("EventValidate3"), style="color:red")
 	)
 })
 
@@ -241,7 +243,8 @@ output$Frequent_Ngram_controls_7 <- renderUI({
 		align="left",
 		textInput("EventMapName4", label = h4("Enter label to save result"), value = "" ),
 		radioButtons("KeepIrregularEvents_2",label = h4("Keep irregular events:"), choices = c('Keep', 'Drop'), inline = TRUE),
-		actionButton("EventButton4", "Create New Mapping")
+		actionButton("EventButton4", "Create New Mapping"),
+		span(textOutput("EventValidate4"), style="color:red")
 	)
 })
 
@@ -271,7 +274,8 @@ output$Cluster_Event_controls_3 <- renderUI({
 	tags$div(
 		align = "left",
 		textInput("EventMapName6", label = h4("Enter label to save this view + new clustering"), value = ""),
-		actionButton("EventButton6", "Cluster Events")
+		actionButton("EventButton6", "Cluster Events"),
+		span(textOutput("EventValidate6"), style="color:red")
 	)
 })
 
@@ -298,7 +302,8 @@ output$SelectSubsetControls_2 <- renderUI({
 			label = h4(paste("Enter label for this subset of the", input$SelectSubsetMapInputID," mapping")),
 			value = ""
 		),
-		actionButton("SelectSubsetButton", "Save Subset")
+		actionButton("SelectSubsetButton", "Save Subset"),
+		span(textOutput("SelectSubsetValidate"), style="color:red")
 	)
 })
 
