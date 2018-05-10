@@ -8,21 +8,9 @@
 
 ui <- fluidPage(
     useShinyjs(),
-    visualizations <- c(
-        'Threads (event time)',
-        'Threads (actual time)',
-        'Threads (relative time)',
-        'Event network (circle)',
-        'Event network (force)',
-        'Other networks',
-        'Role Maps',
-        'Thread Trajectories'
-    ),
 
     # Application title
     tags$h3(align='center', "ThreadNet 3 Development"),
-
-    #  tags$audio( src='tellusastory.mp3',type='audio/mpeg', controls='TRUE'),
 
     # tab definitions are under "ui" directory
     tabsetPanel(
