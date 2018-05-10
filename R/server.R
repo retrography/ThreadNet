@@ -83,8 +83,8 @@ server <- shinyServer(function(input, output, session) {
 		get_event_mapping_name_list()
 	})
 
-	#dataframe for occurrences that are read in from file1
-	occ <- eventReactive(input$file1,read_occurrences(input$file1))
+	#dataframe for occurrences that are read in from inputFile
+	occ <- eventReactive(input$inputFile,read_occurrences(input$inputFile))
 
 	# selected columns from the raw data
 	selectOcc <- reactive(occ()[c("tStamp", input$CFcolumnsID)])
