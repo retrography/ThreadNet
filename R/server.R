@@ -87,10 +87,11 @@ server <- shinyServer(function(input, output, session) {
 	occ <- eventReactive(input$file1,read_occurrences(input$file1))
 
 	# selected columns from the raw data
-	selectOcc <- reactive(occ()[c("tStamp", input$CFcolumnsID)] )
+	selectOcc <- reactive(occ()[c("tStamp", input$CFcolumnsID)])
 
 	# select rows using the nice DT input
-	selectOccFilter <- reactive(selectOcc()[input$Data_Tab_Output_2_rows_all,])
+	# this depends on initialDataDisplay defined in server/readData.R
+	selectOccFilter <- reactive(selectOcc()[input$initialDataDisplay_rows_all,])
 
 	# The POV tabs reconstruct the data into threads by sorting by tStamp and
 	# adding columns for threadNum and seqNum for the selected POV in ThreadOccByPOV
