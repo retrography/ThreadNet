@@ -6,10 +6,6 @@
 # Absolutely no warranty!
 ##########################################################################################################
 
-# graphic functions used in Shiny App.
-# some plotly, but some from other packages
-library(plotly)
-
 ###### Pie charts for context factors  ####
 # It would be nice to display some other helpful information, perhaps (like the % of possible combinations that occur)
 

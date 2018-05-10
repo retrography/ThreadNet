@@ -17,10 +17,6 @@ server <- shinyServer(function(input, output, session) {
     hide(selector = "#navbar li a[data-value=parameterSettings]")
   })
 
-
-	options(warn=-1)
-	options(shiny.maxRequestSize=30*1024^2)
-
 	# create reactive value to force execution of function that gets map names for menus
 	rv <-reactiveValues(newmap=0)
 
