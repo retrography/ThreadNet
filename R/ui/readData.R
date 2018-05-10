@@ -1,8 +1,11 @@
-tabPanel(value = "readData",
+# UI layout definition for readData tab
+
+tabPanel(
+	value = "readData",
     "Read Data",
     helpText('Select a file that contains your data.'),
     tags$hr(),
-    uiOutput("Data_Tab_Controls_1"),
-    uiOutput("Data_Tab_Controls_2"),
-    DT::dataTableOutput("Data_Tab_Output_2")
+    uiOutput("inputFileSelector"),
+    uiOutput("initialDataColumns"),
+    DT::dataTableOutput("initialDataDisplay")
 )
