@@ -5,7 +5,7 @@ output$inputFileSelector <- renderUI({
 	tags$div(
 		align = "center",
 		fileInput(
-			"file1",
+			"inputFile",
 			"Please select a .csv file",
 			accept = c(
 				"text/csv",
