@@ -103,13 +103,24 @@ server <- shinyServer(function(input, output, session) {
 
 	# The POV tabs reconstruct the data into threads by sorting by tStamp and
     # adding columns for threadNum and seqNum for the selected POV in ThreadOccByPOV
+	# TODO: this is no longer reactive, can be moved to another file (eg server/choosePOV)
 	generateBaseThreadOcc <- function() {
 
 		# validate that Thread and Event have been selected
 		validate(need(get_THREAD_CF() != "", "You must select at least one Thread"))
         validate(need(get_EVENT_CF()  != "", "You must select at least one Event"))
 
-		ThreadOccByPOV(selectOccFilter(), get_THREAD_CF(), get_EVENT_CF())
+		newThreadData <- ThreadOccByPOV(selectOccFilter(), get_THREAD_CF(), get_EVENT_CF())
+
+		# once everything is returned, show the other tabs
+		shinyjs::show(selector = "#navbar li a[data-value=visualize]")
+  	 	shinyjs::show(selector = "#navbar li a[data-value=subsets]")
+   		shinyjs::show(selector = "#navbar li a[data-value=comparisons]")
+   		shinyjs::show(selector = "#navbar li a[data-value=movingWindow]")
+   		shinyjs::show(selector = "#navbar li a[data-value=parameterSettings]")
+
+		return(newThreadData)
+
 	}
 
 	#############################
