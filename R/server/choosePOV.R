@@ -40,4 +40,4 @@ output$ContextFlowers_Events <- renderPlotly({
 
 #### Review Data sub-tab ####
 
-output$DisplayThreadPOV <- DT::renderDataTable({threadedOcc()})
+output$DisplayThreadPOV <- DT::renderDataTable({generateBaseThreadOcc()})

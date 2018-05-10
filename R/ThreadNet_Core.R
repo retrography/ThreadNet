@@ -315,20 +315,13 @@ ThreadOccByPOV <- function(o,THREAD_CF,EVENT_CF){
 
     incProgress(4/n)
 
-    # just add the one column with the combined values
-   # occ["ZM_1"] = as.integer(occ[,newColName(EVENT_CF)])
-
-
+	# TODO: generate what we need here, but don't store the map yet
     # this will store the event map in the GlobalEventMappings and return events with network cluster added for zooming...
     e=clusterEvents(occ, 'OneToOne', 'Network Proximity', EVENT_CF,'threads')
 
   })
 
-  # for debugging, this is really handy
-#   save(occ,e,file="O_and_E_1.rdata")
-
-   print('done converting occurrences...')
-
+	# TODO: move these to run after the function has successfully returned
    shinyjs::show(selector = "#navbar li a[data-value=visualize]")
    shinyjs::show(selector = "#navbar li a[data-value=subsets]")
    shinyjs::show(selector = "#navbar li a[data-value=comparisons]")
@@ -634,10 +627,10 @@ OccToEvents3 <- function(o, EventMapName,EVENT_CF, compare_CF,TN, CF, rx, KeepIr
 # cluster_method is either "Sequential similarity" or "Contextual Similarity" or "Network Structure"
 clusterEvents <- function(e, NewMapName, cluster_method, event_CF,what_to_return='cluster'){
 
+	# TODO: allow this to create the eventCluster and gather/return data, but don't attempt to make a new eventMap listing here
+	# the dataset will be returned, and the user will explcitly add a new event
+
   # make sure to cluster on the correct column (one that exists...)
-
-
-
   if (cluster_method=="Sequential similarity")
   { dd = dist_matrix_seq(e) }
   else if (cluster_method=="Contextual Similarity")
