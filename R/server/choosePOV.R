@@ -38,20 +38,6 @@ output$ContextFlowers_3 <- renderPlotly({
 	)
 })
 
-#### Preview Threads sub-tab ####
-
-output$previewThreadMap_1 <- renderPlotly({
-	threadMap(
-		threadedOcc(),
-		"threadNum",
-		"tStamp",
-		newColName(get_EVENT_CF()),
-		16
-	)
-})
-
-output$Preview_Thread_Output_1 <- renderText({ paste(numThreads(threadedOcc(), "threadNum"),"threads in the selected data.")})
-
 #### Preview Data sub-tab ####
 
 output$Thread_Tab_Output_1 <- DT::renderDataTable({ threadedOcc()})
