@@ -31,6 +31,18 @@ source("ThreadNet_Graphics.R")
 source("ThreadNet_Metrics.R")
 source("InputData.R")
 
+# visualization types for UI dropdowns
+visualizations <- c(
+	'Threads (event time)',
+	'Threads (actual time)',
+	'Threads (relative time)',
+	'Event network (circle)',
+	'Event network (force)',
+	'Other networks',
+	'Role Maps',
+	'Thread Trajectories'
+),
+
 # app environment options
 options(warn=-1) # suppress plotly warnings
 options(shiny.maxRequestSize=30*1024^2) # increase size limit for file upload
