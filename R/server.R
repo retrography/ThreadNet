@@ -37,6 +37,7 @@ server <- shinyServer(function(input, output, session) {
 
 	# These sliders controls the zoom level for zooming in-out
 	# they are grouoped here because hopefully they can be replaced by a single function... except that reactive functions don't take parameters
+	# TODO: review this
 	get_Zoom_VIZ <<- reactive({ return( ifelse (zoom_upper_limit(get_event_mapping_threads(input$VisualizeEventMapInputID))==1 ,
 												"ZM_1", paste0("ZM_",input$VisualizeTabZoomID))) })
 
@@ -100,7 +101,6 @@ server <- shinyServer(function(input, output, session) {
    		shinyjs::show(selector = "#navbar li a[data-value=parameterSettings]")
 
 		return(newThreadData)
-
 	}
 
 	#############################
@@ -169,35 +169,22 @@ server <- shinyServer(function(input, output, session) {
 	CF_levels <- reactive( get_CF_levels( threadedEventsDiaComp(),input$selectComparisonID) )
 
 	# Get data for the Moving Window tab.
-	threadedEventsMove <- reactive({get_event_mapping_threads(input$MovingWindowMapInputID )})
-
-	threadedEventsMove_A <- reactive({
-		get_moving_window(
-			threadedEventsMove() ,
-			input$MovingWindowSizeID,
-			input$WindowLocation_A_ID
-		)
-	})
-
-	threadedEventsMove_B <- reactive({
-		get_moving_window(
-			threadedEventsMove(),
-			input$MovingWindowSizeID,
-			input$WindowLocation_B_ID
-		)
-	})
+	threadedEventsMove   <- reactive({get_event_mapping_threads(input$MovingWindowMapInputID )})
+	threadedEventsMove_A <- reactive({get_moving_window(threadedEventsMove(),input$MovingWindowSizeID,input$WindowLocation_A_ID) })
+	threadedEventsMove_B <- reactive({get_moving_window(threadedEventsMove(),input$MovingWindowSizeID,input$WindowLocation_B_ID ) })
 
 	# Get data for the Visualize tab.  Need parallel functions for the other tabs.
 	threadedEventsViz_ALL <- reactive({  get_event_mapping_threads( input$VisualizeEventMapInputID ) })
 
 	threadedEventsViz <- reactive({
-	  loc = input$VisualizeRangeID[1]
-	  width=input$VisualizeRangeID[2] - input$VisualizeRangeID[1]
-	  get_moving_window(threadedEventsViz_ALL(),width,loc) })
+		loc   <- input$VisualizeRangeID[1]
+		width <- input$VisualizeRangeID[2] - input$VisualizeRangeID[1]
+		get_moving_window(threadedEventsViz_ALL(),width,loc)
+	})
 
-	###########################################
-	# Functions to handle Button Click events #
-	###########################################
+	################################
+	# Button click event functions #
+	################################
 
 	# this function runs when you push the button to create a new mapping based on chunks
 	observeEvent( input$EventButton2,
@@ -294,9 +281,9 @@ server <- shinyServer(function(input, output, session) {
 	               output$SelectSubsetValidate = renderText(paste('New map named', input$SelectSubsetMapName ,'has been created'))
 	             }, ignoreInit = TRUE)
 
-	#########################################
-	# Functions for handling Event Mappings #
-	#########################################
+	###########################
+	# Event mapping functions #
+	###########################
 
 	# reactive functions for the export and delete buttons
 	observeEvent(input$DeleteMappingButton,{
