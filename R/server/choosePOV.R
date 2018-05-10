@@ -2,7 +2,7 @@
 
 #### Define Threads sub-tab ####
 
-output$POV_Tab_Controls_2 <- renderUI({
+output$selectThreads <- renderUI({
 	checkboxGroupInput(
 		"THREAD_CF_ID",
 		"Select columns to define threads:",
@@ -12,7 +12,7 @@ output$POV_Tab_Controls_2 <- renderUI({
 	)
 })
 
-output$ContextFlowers_2 <- renderPlotly({
+output$ContextFlowers_Threads <- renderPlotly({
 	CF_multi_pie(
 		selectOccFilter(),
 		get_THREAD_CF()
@@ -21,7 +21,7 @@ output$ContextFlowers_2 <- renderPlotly({
 
 #### Define Events sub-tab ####
 
-output$POV_Tab_Controls_3 <- renderUI({
+output$selectEvents <- renderUI({
 	checkboxGroupInput(
 		"EVENT_CF_ID",
 		"Select columns to mark events:",
@@ -31,13 +31,13 @@ output$POV_Tab_Controls_3 <- renderUI({
 	)
 })
 
-output$ContextFlowers_3 <- renderPlotly({
+output$ContextFlowers_Events <- renderPlotly({
 	CF_multi_pie(
 		selectOccFilter(),
 		get_EVENT_CF()
 	)
 })
 
-#### Preview Data sub-tab ####
+#### Review Data sub-tab ####
 
-output$Thread_Tab_Output_1 <- DT::renderDataTable({ threadedOcc()})
+output$DisplayThreadPOV <- DT::renderDataTable({threadedOcc()})
