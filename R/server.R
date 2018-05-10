@@ -83,11 +83,18 @@ server <- shinyServer(function(input, output, session) {
 		get_event_mapping_name_list()
 	})
 
+	####################################
+	# Functions for reading Input Data #
+	####################################
+
 	#dataframe for occurrences that are read in from inputFile
 	occ <- eventReactive(input$inputFile,read_occurrences(input$inputFile))
 
 	# selected columns from the raw data
 	selectOcc <- reactive(occ()[c("tStamp", input$CFcolumnsID)])
+
+
+	######################################################
 
 	# select rows using the nice DT input
 	# this depends on initialDataDisplay defined in server/readData.R
@@ -96,10 +103,10 @@ server <- shinyServer(function(input, output, session) {
 	# The POV tabs reconstruct the data into threads by sorting by tStamp and
 	# adding columns for threadNum and seqNum for the selected POV in ThreadOccByPOV
 	threadedOcc <- reactive({
-	  validate(need(input$THREAD_CF_ID != "", "You must select at least one Thread"))
-	  validate(need(input$EVENT_CF_ID != "", "You must select at least one Event"))
-	  ThreadOccByPOV( selectOccFilter(), input$THREAD_CF_ID, input$EVENT_CF_ID )
-	  })
+		validate(need(input$THREAD_CF_ID != "", "You must select at least one Thread"))
+		validate(need(input$EVENT_CF_ID != "", "You must select at least one Event"))
+		ThreadOccByPOV(selectOccFilter(), input$THREAD_CF_ID, input$EVENT_CF_ID)
+	})
 
 	# get the data that will be the input for this tab
 	chunkInputEvents <- reactive({
