@@ -202,136 +202,114 @@ count_ngrams <- function(o,TN,CF,n){
 #'@export
 ThreadOccByPOV <- function(o,THREAD_CF,EVENT_CF){
 
-  withProgress(message = "Creating Events", value = 0,{
+	withProgress(message = "Creating Events", value = 0,{
 
-    n = 5
+    	n = 5
 
-    # make sure there is a value
-    if (length(THREAD_CF) == 0 | length(EVENT_CF)==0){return(data.frame())}
+    	# make sure there is a value
+		# TODO: improve this with validate and test for !is.null()
+    	if (length(THREAD_CF) == 0 | length(EVENT_CF)==0){return(data.frame())}
 
-    incProgress(1/n)
+    	incProgress(1/n)
 
-    # Sort by POV and timestamp. The idea is to get the stream of activities from
-    # a particular point of view (e.g., actor, location, etc.)
-    # add the new column that combines CFs, if necessary
+    	# Sort by POV and timestamp. The idea is to get the stream of activities from
+    	# a particular point of view (e.g., actor, location, etc.)
+    	# add the new column that combines CFs, if necessary
+		# this could be a function
+		# also all these functions related to making the new event map could be in a special file
 
-    # get a new column name based on the thread_CF -- use this to define threads
-    nPOV = newColName(THREAD_CF)
-    occ = combineContextFactors(o,THREAD_CF, nPOV )
+    	# get a new column name based on the thread_CF -- use this to define threads
+    	nPOV <- newColName(THREAD_CF)
+    	occ  <- combineContextFactors(o,THREAD_CF, nPOV )
 
-    # print("nPOV")
-    # print(nPOV)
-    #
-    # print("THREAD_CF")
-    # print(THREAD_CF)
+    	# The event context factors define the new category of events within those threads
+    	occ <- combineContextFactors(occ,EVENT_CF,newColName(EVENT_CF))
+    	occ <- occ[order(occ[nPOV],occ$tStamp),]
 
-    # The event context factors define the new category of events within those threads
-    occ = combineContextFactors(occ,EVENT_CF,newColName(EVENT_CF))
-    occ = occ[order(occ[nPOV],occ$tStamp),]
+    	# add two columns to the data frame
+    	occ$threadNum <- integer(nrow(occ))
+    	occ$seqNum    <- integer(nrow(occ))
 
-    # add two columns to the data frame
-    occ$threadNum = integer(nrow(occ))
-    occ$seqNum =   integer(nrow(occ))
+   		# add new column called label - just copy the new combined event_CF column
+    	occ$label <- occ[[newColName(EVENT_CF)]]
 
-    # add new column called label - just copy the new combined event_CF column
-    occ$label = occ[[newColName(EVENT_CF)]]
+    	# occurrences have zero duration
+    	occ$eventDuration <- 0
 
+    	# Also add columns for the time gapsthat appear from this POV
+    	occ$timeGap <- diff_tStamp(occ$tStamp)
 
-    # occurrences have zero duration
-    occ$eventDuration = 0
+    	# create new column for relative time stamp. Initialize to absolute tStamp and adjust below
+    	occ$relativeTime <- lubridate::ymd_hms(occ$tStamp)
 
-    # Also add columns for the time gapsthat appear from this POV
-    occ$timeGap  =  diff_tStamp(occ$tStamp)
+    	# then get the unique values in that POV
+    	occ[nPOV] <- as.factor(occ[,nPOV])
+    	pov_list  <- levels(occ[[nPOV]])
 
+    	incProgress(2/n)
 
-    # create new column for relative time stamp. Initialize to absolute tStamp and adjust below
-    occ$relativeTime = lubridate::ymd_hms(occ$tStamp)
+    	# now loop through the pov_list and assign values to the new columns
+    	start_row <- 1
+    	thrd      <- 1
 
-    # then get the unique values in that POV
-    occ[nPOV] = as.factor(occ[,nPOV])
-    pov_list = levels(occ[[nPOV]])
+		# TODO: convert to apply with function
+    	for (p in pov_list){
 
-    incProgress(2/n)
+      		# get the length of the thread
+      		tlen <- sum(occ[[nPOV]]==p)
 
-    # now loop through the pov_list and assign values to the new columns
-    start_row=1
-    thrd=1
-    for (p in pov_list){
+      		# guard against error
+      		if (tlen>0){
 
-      # get the length of the thread
-      tlen = sum(occ[[nPOV]]==p)
+        		# compute the index of the end row
+        		end_row <- start_row+tlen-1
 
-      # print(paste('start_row=',start_row))
-      # print(paste('thrd =', thrd ))
-      # print(paste('p =', p ))
-      # print(paste('tlen =', tlen ))
+        		# they all get the same thread number and incrementing seqNum
+        		occ[start_row:end_row, "threadNum"] <- as.matrix(rep(as.integer(thrd),tlen))
+        		occ[start_row:end_row, "seqNum"] <- as.matrix(c(1:tlen))
 
-      # guard against error
-      if (tlen>0){
+        		# find the earliest time value for this thread
+        		start_time <- min(lubridate::ymd_hms(occ$tStamp[start_row:end_row]))
 
-        #compute the index of the end row
-        end_row = start_row+tlen-1
-        # print(paste('start_row =', start_row ))
-        # print(paste('end_row =',end_row  ))
+        		# increment the counters for the next thread
+        		start_row <- end_row + 1
+        		thrd      <- thrd+1
+      		} # tlen>0
+    	}
 
-        # they all get the same thread number and incrementing seqNum
-        occ[start_row:end_row, "threadNum"] <- as.matrix(rep(as.integer(thrd),tlen))
-        occ[start_row:end_row, "seqNum"] <- as.matrix(c(1:tlen))
+    	incProgress(3/n)
 
+    	# split occ data frame by threadNum to find earliest time value for that thread
+    	# then substract that from initiated relativeTime from above
+     	occ_split <- lapply(split(occ, occ$threadNum), function(x) {x$relativeTime = x$relativeTime - min(lubridate::ymd_hms(x$tStamp)); x})
 
-        # find the earliest time value for this thread
-        start_time = min(lubridate::ymd_hms(occ$tStamp[start_row:end_row]))
-        # print(start_time)
+    	# row bind data frame back together
+     	occ <- data.frame(do.call(rbind, occ_split))
 
+    	#  these are just equal to the row numbers -- one occurrence per event
+    	occ["occurrences"] <- 1:nrow(occ)
 
-        # increment the counters for the next thread
-        start_row = end_row + 1
-        thrd=thrd+1
-      } # tlen>0
-    }
+    	# now go through and change each of the CF values to a vector (0,0,0,1,0,0,0,0)
+		# TODO: this can be an apply with function
+    	for (cf in EVENT_CF){
+      		# make a new column for each CF
+      		VCF <- paste0("V_",cf)
+      		occ[[VCF]] <- vector(mode = "integer",length=nrow(occ))
 
-    incProgress(3/n)
+      		for (r in 1:nrow(occ)){ occ[[r,VCF]] = list(convert_CF_to_vector(occ,cf,r)) }
+    	}
 
-    # split occ data frame by threadNum to find earliest time value for that thread
-    # then substract that from initiated relativeTime from above
-     occ_split = lapply(split(occ, occ$threadNum), function(x) {x$relativeTime = x$relativeTime - min(lubridate::ymd_hms(x$tStamp)); x})
-    # # row bind data frame back together
-     occ= data.frame(do.call(rbind, occ_split))
+    	incProgress(4/n)
 
-    #  these are just equal to the row numbers -- one occurrence per event
-    occ["occurrences"] =   1:nrow(occ)
+		# TODO: generate what we need here, but don't store the map yet
+    	# this will store the event map in the GlobalEventMappings and return events with network cluster added for zooming...
+    	e <- clusterEvents(occ, 'OneToOne', 'Network Proximity', EVENT_CF,'threads')
 
-
-    # now go through and change each of the CF values to a vector (0,0,0,1,0,0,0,0)
-    for (cf in EVENT_CF){
-      #make a new column for each CF
-      VCF = paste0("V_",cf)
-      occ[[VCF]]= vector(mode = "integer",length=nrow(occ))
-
-      for (r in 1:nrow(occ)){
-        occ[[r,VCF]] = list(convert_CF_to_vector(occ,cf,r))
-      }
-    }
-
-    incProgress(4/n)
-
-	# TODO: generate what we need here, but don't store the map yet
-    # this will store the event map in the GlobalEventMappings and return events with network cluster added for zooming...
-    e=clusterEvents(occ, 'OneToOne', 'Network Proximity', EVENT_CF,'threads')
-
-  })
-
-	# TODO: move these to run after the function has successfully returned
-   shinyjs::show(selector = "#navbar li a[data-value=visualize]")
-   shinyjs::show(selector = "#navbar li a[data-value=subsets]")
-   shinyjs::show(selector = "#navbar li a[data-value=comparisons]")
-   shinyjs::show(selector = "#navbar li a[data-value=movingWindow]")
-   shinyjs::show(selector = "#navbar li a[data-value=parameterSettings]")
+  	}) # end progress bar
 
    incProgress(5/n)
 
   return( e )
-
 }
 
 
