@@ -8,28 +8,32 @@
 
 server <- shinyServer(function(input, output, session) {
 
-  observe({
-    hide(selector = "#navbar li a[data-value=choosePOV]")
-    hide(selector = "#navbar li a[data-value=visualize]")
-    hide(selector = "#navbar li a[data-value=subsets]")
-    hide(selector = "#navbar li a[data-value=comparisons]")
-    hide(selector = "#navbar li a[data-value=movingWindow]")
-    hide(selector = "#navbar li a[data-value=parameterSettings]")
-  })
+	# hide tabs on startup
+	observe({
+    	hide(selector = "#navbar li a[data-value=choosePOV]")
+    	hide(selector = "#navbar li a[data-value=visualize]")
+    	hide(selector = "#navbar li a[data-value=subsets]")
+    	hide(selector = "#navbar li a[data-value=comparisons]")
+    	hide(selector = "#navbar li a[data-value=movingWindow]")
+    	hide(selector = "#navbar li a[data-value=parameterSettings]")
+	})
 
 	# create reactive value to force execution of function that gets map names for menus
-	rv <-reactiveValues(newmap=0)
+	rv <- reactiveValues(newmap=0)
 
-	# get_CF returns the choice of contextual factors from the Data tab.
-	get_CF <<- reactive({ return( input$CFcolumnsID ) })
+	# add reactive value to force update
+	get_event_mapping_names <- reactive({
+		rv$newmap
+		get_event_mapping_name_list()
+	})
 
-	# get_POV returns the choice of POV from the POV tab
-	get_THREAD_CF <<- reactive({ return(input$THREAD_CF_ID) })
-	get_EVENT_CF <<- reactive({ return(input$EVENT_CF_ID) })
+	# Global variables references throughout app
+	# TODO: review where these are called
+	get_CF            <<- reactive({ return(input$CFcolumnsID)  })
+	get_THREAD_CF     <<- reactive({ return(input$THREAD_CF_ID) })
+	get_EVENT_CF      <<- reactive({ return(input$EVENT_CF_ID)  })
+	get_timeScale     <<- reactive({ return(input$timeScaleID)  })
 	get_COMPARISON_CF <<- reactive({ return(setdiff(get_CF(), union(get_THREAD_CF(),get_EVENT_CF() ))) })
-
-	# time scale for use throughout the app
-	get_timeScale <<- reactive({ return(input$timeScaleID) })
 
 	# These sliders controls the zoom level for zooming in-out
 	# they are grouoped here because hopefully they can be replaced by a single function... except that reactive functions don't take parameters
@@ -77,36 +81,40 @@ server <- shinyServer(function(input, output, session) {
 	  return( ifelse (zoom_upper_limit(get_event_mapping_threads(input$ChunkInputMapID))==1 ,
 											"ZM_1", paste0("ZM_",input$chunkZoomID))) })
 
-	# add reactive value to force update
-	get_event_mapping_names <- reactive({
-		rv$newmap
-		get_event_mapping_name_list()
-	})
 
 	####################################
 	# Functions for reading Input Data #
 	####################################
 
-	#dataframe for occurrences that are read in from inputFile
+	# dataframe for occurrences that are read in from inputFile
 	occ <- eventReactive(input$inputFile,read_occurrences(input$inputFile))
 
 	# selected columns from the raw data
 	selectOcc <- reactive(occ()[c("tStamp", input$CFcolumnsID)])
 
-
-	######################################################
+	###############################################
+	# Functions for Generating Base Threaded View #
+	###############################################
 
 	# select rows using the nice DT input
-	# this depends on initialDataDisplay defined in server/readData.R
-	selectOccFilter <- reactive(selectOcc()[input$initialDataDisplay_rows_all,])
+    # this depends on initialDataDisplay defined in server/readData.R
+	# TODO: anything in later tabs that calls selectOccFilter should be updated to depend on eventMap, not inputFile
+    selectOccFilter <- reactive(selectOcc()[input$initialDataDisplay_rows_all,])
 
 	# The POV tabs reconstruct the data into threads by sorting by tStamp and
-	# adding columns for threadNum and seqNum for the selected POV in ThreadOccByPOV
-	threadedOcc <- reactive({
-		validate(need(input$THREAD_CF_ID != "", "You must select at least one Thread"))
-		validate(need(input$EVENT_CF_ID != "", "You must select at least one Event"))
-		ThreadOccByPOV(selectOccFilter(), input$THREAD_CF_ID, input$EVENT_CF_ID)
-	})
+    # adding columns for threadNum and seqNum for the selected POV in ThreadOccByPOV
+	generateBaseThreadOcc <- function() {
+
+		# validate that Thread and Event have been selected
+		validate(need(get_THREAD_CF() != "", "You must select at least one Thread"))
+        validate(need(get_EVENT_CF()  != "", "You must select at least one Event"))
+
+		ThreadOccByPOV(selectOccFilter(), get_THREAD_CF(), get_EVENT_CF())
+	}
+
+	#############################
+	# TODO: functions to review #
+	#############################
 
 	# get the data that will be the input for this tab
 	chunkInputEvents <- reactive({
@@ -114,6 +122,92 @@ server <- shinyServer(function(input, output, session) {
 	  req(input$ChunkInputMapID)
 		get_event_mapping_threads(input$ChunkInputMapID)
 	})
+
+	# get the data that will be the input for this tab
+	regexInputEvents <- reactive(get_event_mapping_threads(input$RegExInputMapID))
+
+	# get the input values and return data frame with regex & label
+	regexInput <- reactive({
+		data.frame(
+			pattern <- unlist(lapply(1:input$numRegexInputRows,function(i){input[[paste0('regex', i)]]})),
+			label   <- unlist(lapply(1:input$numRegexInputRows,function(i){input[[paste0('regexLabel', i)]]})),
+			stringsAsFactors = FALSE
+		)
+	})
+
+	# get the data that will be the input for this tab
+	freqNgramInputEvents <- reactive(get_event_mapping_threads( input$freqNgramInputMapID))
+
+	fng_select <- reactive(
+		support_level(
+			thread_text_vector(freqNgramInputEvents(),'threadNum',get_Zoom_freqNgram(),' '),
+			frequent_ngrams(
+				freqNgramInputEvents() ,
+				'threadNum',
+				get_Zoom_freqNgram(),
+				input$freqNgramRange[1],
+				input$freqNgramRange[2],
+				TRUE
+			)
+		)
+	)
+
+	# The bottom example shows a server-side table. Make sure you have included row names in the table (as the first column of the table).
+	# In the case of server-side processing, the row names of the selected rows are available in input$x3_rows_selected as a character vector.
+
+	selected_ngrams <- reactive({
+		s <- as.integer(input$freqnGramTable_rows_selected)
+		data.frame(
+			pattern <- unlist(lapply(1:length(s),function(i){ str_replace_all(fng_select()[i,'ngrams'],' ',',') })),
+			label   <- unlist(lapply(1:length(s),function(i){paste0("<",str_replace_all(fng_select()[i,'ngrams'],' ','_'),">")})),
+			stringsAsFactors=FALSE
+		)
+	})
+
+	# Get data for the Visualize tab.Need parallel functions for the other tabs.
+	subsetEventsViz <- reactive({get_event_mapping_threads( input$SelectSubsetMapInputID ) })
+
+	# Get data for the COMPARE tab mapping A
+	threadedEventsComp_A <- reactive({get_event_mapping_threads(input$CompareMapInputID_A ) })
+
+	# Get data for the COMPARE tab mapping B.
+	threadedEventsComp_B <- reactive({get_event_mapping_threads( input$CompareMapInputID_B ) })
+
+	# Get data for the Diachronic COMPARE tab.
+	threadedEventsDiaComp <- reactive({get_event_mapping_threads(input$DiaCompareMapInputID ) })
+
+	CF_levels <- reactive( get_CF_levels( threadedEventsDiaComp(),input$selectComparisonID) )
+
+	# Get data for the Moving Window tab.
+	threadedEventsMove <- reactive({get_event_mapping_threads(input$MovingWindowMapInputID )})
+
+	threadedEventsMove_A <- reactive({
+		get_moving_window(
+			threadedEventsMove() ,
+			input$MovingWindowSizeID,
+			input$WindowLocation_A_ID
+		)
+	})
+
+	threadedEventsMove_B <- reactive({
+		get_moving_window(
+			threadedEventsMove(),
+			input$MovingWindowSizeID,
+			input$WindowLocation_B_ID
+		)
+	})
+
+	# Get data for the Visualize tab.  Need parallel functions for the other tabs.
+	threadedEventsViz_ALL <- reactive({  get_event_mapping_threads( input$VisualizeEventMapInputID ) })
+
+	threadedEventsViz <- reactive({
+	  loc = input$VisualizeRangeID[1]
+	  width=input$VisualizeRangeID[2] - input$VisualizeRangeID[1]
+	  get_moving_window(threadedEventsViz_ALL(),width,loc) })
+
+	###########################################
+	# Functions to handle Button Click events #
+	###########################################
 
 	# this function runs when you push the button to create a new mapping based on chunks
 	observeEvent( input$EventButton2,
@@ -241,6 +335,7 @@ server <- shinyServer(function(input, output, session) {
 	cluster_result <- eventReactive(input$EventButton6,{
 		rv$newmap <- rv$newmap+1 # trigger reactive value
 		isolate(
+			# TODO: review this -- need to explicitly call function to add event
 			clusterEvents(
 				get_event_mapping_threads(input$ClusterEventsInputID),
 				input$EventMapName6,
@@ -275,7 +370,7 @@ server <- shinyServer(function(input, output, session) {
 	}, ignoreInit = TRUE)
 
 	observeEvent(input$ExportMappingRData,{
-		export_event_mapping(input$ManageEventMapInputID )
+		export_event_mapping_rdata(input$ManageEventMapInputID )
 		output$action_confirm <- renderText(paste(input$ManageEventMapInputID, " exported as .RData file"))
 	})
 
@@ -284,6 +379,9 @@ server <- shinyServer(function(input, output, session) {
 		output$action_confirm <- renderText(paste(input$ManageEventMapInputID, " exported as .csv file"))
 	})
 
+	###################################################
+	# Tab-specific server output function definitions #
+	###################################################
 
 	# Get data for the Visualize tab.Need parallel functions for the other tabs.
 #	threadedEventsViz <- reactive({get_event_mapping_threads( input$VisualizeEventMapInputID ) })
