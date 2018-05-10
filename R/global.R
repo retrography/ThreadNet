@@ -41,7 +41,7 @@ visualizations <- c(
 	'Other networks',
 	'Role Maps',
 	'Thread Trajectories'
-),
+)
 
 # app environment options
 options(warn=-1) # suppress plotly warnings
