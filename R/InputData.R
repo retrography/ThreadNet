@@ -27,6 +27,7 @@ read_occurrences <- function(inputFile){
     o <- cleanOcc(o,cfnames(o))
 
     # data is loaded; show choosePOV (todo -- run this when function has returned ok
+	# see server.R -- make panel conditional on a the read_occurrences variable existing / being returned succesfully?
     shinyjs::show(selector = "#navbar li a[data-value=choosePOV]")
 
     return(o)

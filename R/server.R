@@ -9,6 +9,7 @@
 server <- shinyServer(function(input, output, session) {
 
 	# hide tabs on startup
+	# make these conditional? (see note below)
 	observe({
     	hide(selector = "#navbar li a[data-value=choosePOV]")
     	hide(selector = "#navbar li a[data-value=visualize]")
@@ -111,9 +112,12 @@ server <- shinyServer(function(input, output, session) {
 		validate(need(get_THREAD_CF() != "", "You must select at least one Thread"))
         validate(need(get_EVENT_CF()  != "", "You must select at least one Event"))
 
-		newThreadData <- ThreadOccByPOV(selectOccFilter(), get_THREAD_CF(), get_EVENT_CF())
+		# TODO:
+		# Globally available -- button will need to add "newThreadData" with a new name
+		newThreadData <<- ThreadOccByPOV(selectOccFilter(), get_THREAD_CF(), get_EVENT_CF())
 
 		# once everything is returned, show the other tabs
+		# TODO: make these conditional panels based on GlobalEventList has at least one element?
 		shinyjs::show(selector = "#navbar li a[data-value=visualize]")
   	 	shinyjs::show(selector = "#navbar li a[data-value=subsets]")
    		shinyjs::show(selector = "#navbar li a[data-value=comparisons]")
@@ -207,12 +211,7 @@ server <- shinyServer(function(input, output, session) {
 	# Button click event functions #
 	################################
 
-	# this function runs when you push the button to create a new mapping based on chunks
-	observeEvent( input$EventButton2,
-    if (check_map_name(input$EventMapName2)){
-      mapName2 = input$EventMapName2
-      output$EventValidate2 = renderText(paste('Map Name', mapName2 , 'already exists, please select a different name'))
-    } else {
+	observeEvent( input$EventButton2,{
 		rv$newmap <- rv$newmap+1 # trigger reactive value
 		isolate(
 			OccToEvents_By_Chunk(
@@ -227,7 +226,7 @@ server <- shinyServer(function(input, output, session) {
 				get_COMPARISON_CF()
 			)
 		)
-		output$EventValidate2 = renderText(paste('New map named', input$EventMapName2 ,'has been created'))
+		#output$EventValidate2 = renderText(paste('New map named', input$EventMapName2 ,'has been created'))
 	}, ignoreInit = TRUE )
 
 	# get the data that will be the input for this tab
@@ -265,7 +264,7 @@ server <- shinyServer(function(input, output, session) {
 				input$KeepIrregularEvents
 			)
 		)
-	  output$EventValidate3 = renderText(paste('New map named', input$EventMapName3 ,'has been created'))
+	  #output$EventValidate3 = renderText(paste('New map named', input$EventMapName3 ,'has been created'))
 	}, ignoreInit = TRUE )
 
 
@@ -326,10 +325,9 @@ server <- shinyServer(function(input, output, session) {
 				input$KeepIrregularEvents_2
 			)
 		)
-		output$EventValidate4 = renderText(paste('New map named', input$EventMapName4 ,'has been created'))
+		#output$EventValidate4 = renderText(paste('New map named', input$EventMapName4 ,'has been created'))
 	}, ignoreInit = TRUE)
 
-	# separate the cluster calculation from the dendrogram display
 	cluster_result <- eventReactive(input$EventButton6,{
 		rv$newmap <- rv$newmap+1 # trigger reactive value
 		isolate(
@@ -367,13 +365,15 @@ server <- shinyServer(function(input, output, session) {
 		output$delete_confirm <- renderText(paste(input$ManageEventMapInputID, " deleted."))
 	}, ignoreInit = TRUE)
 
+	# Export an Event Mapping as RData
 	observeEvent(input$ExportMappingRData,{
 		export_event_mapping_rdata(input$ManageEventMapInputID )
 		output$action_confirm <- renderText(paste(input$ManageEventMapInputID, " exported as .RData file"))
 	})
 
+	# Export an Event Mapping as CSV
 	observeEvent(input$ExportMappingCsv,{
-		export_event_mapping_csv( input$ManageEventMapInputID )
+		export_event_mapping_csv(input$ManageEventMapInputID)
 		output$action_confirm <- renderText(paste(input$ManageEventMapInputID, " exported as .csv file"))
 	})
 

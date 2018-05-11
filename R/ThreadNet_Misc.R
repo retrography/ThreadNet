@@ -8,7 +8,7 @@
 
 #' numThreads counts how many threads in the data set
 #'
-#' Threads must have unique thred numbers for this function to work
+#' Threads must have unique thread numbers for this function to work
 #'
 #' @family ThreadNet_Misc
 #' @param o data frame with occurrences or events
@@ -16,22 +16,23 @@
 #'
 #' @return number of threads
 #' @export
-numThreads = function(o,TN) {length(unique(o[[TN]]))}
+numThreads <- function(o,TN){length(unique(o[[TN]]))}
 
 # Time range for the data set (not really needed but nice)
-timeRange= function(o){
+timeRange <- function(o){
   # get the min/max time in the whole set of occurrences
-  start = min(as.POSIXlt.date(o$tStamp))
-  finish = max(as.POSIXlt.date(o$tStamp))
+  start  <- min(as.POSIXlt.date(o$tStamp))
+  finish <- max(as.POSIXlt.date(o$tStamp))
 
   # take the difference
-  difftime(finish,start)}
+  diff <- difftime(finish,start)
+}
 
 # Put it into a nice phrase
-timeRangePhrase = function(tr){
-  rangeunits = attr(tr,"units")
-  paste(floor(as.numeric(tr)),rangeunits,"from start to finish.")}
-
+timeRangePhrase <- function(tr){
+  rangeunits <- attr(tr,"units")
+  result <- paste(floor(as.numeric(tr)),rangeunits,"from start to finish.")
+}
 
 # this function is used to split up the threads into n ~equal buckets
 make_subsets <- function(d,n){
@@ -41,16 +42,13 @@ make_subsets <- function(d,n){
 # This function takes a slider value and returns a valid column name for zooming
 # if the argument is null, then use ZM_1
 zoomColumn <- function(z){
-  # print(paste("In zoomColumn z=",z))
 
-  if (is.null(z))
-  {r="ZM_1"}
-  else
-  {r=paste0("ZM_",z)}
-
-  # print(paste("In zoomColumn r=",r))
-
-  return(r)
+  if (is.null(z)) {
+		r="ZM_1"
+	} else {
+		r=paste0("ZM_",z)
+	}
+  	return(r)
 }
 
 ######### Functions that return column names #######
@@ -135,9 +133,6 @@ threshold_slider_selected <- function(o){
   return(min(o$timeGap))
 }
 
-
-
-
 #### count the handoffs, but reverse coded -- zero = all different
 diff_handoffs <- function(o){
 
@@ -185,9 +180,6 @@ row_diff_tStamp <- function(this_row){
   return(d)
 }
 
-
-
-
 #' threadSizeTable provides a distribution of the length of threads
 #'
 #' This function should work on either ocurrences or events.
@@ -222,9 +214,6 @@ threadSizeTable <- function(o,TN){
 
   return(s)
 }
-
-
-
 
 #########################################################
 #' convert_TN_to_TramineR
@@ -490,54 +479,9 @@ make_nice_event_DT <- function(e){
   return(e)
 }
 
-
 # find the biggest column with ZM_, and then get the number that goes with that.
 # It will not be the same as the column number.
 zoom_upper_limit <- function(e){
   upper_limit = as.integer(str_replace(colnames(e[max(grep("ZM_",colnames(e)))]),"ZM_",""))
   return(upper_limit)
 }
-
-# sliderInput("ThreadMapZoomID",
-#             "Zoom in and out by event similarity:",
-#             1,100,5, step = 1, ticks=FALSE)
-
-
-
-######################################################
-# Just putting this code here to play with for now.
-# this function finds the common events in two subsets of thread data
-common_events <- function(ss1, ss2, TN, CF, n){
-
-  # get the list of ngrams for each subset of threads
-  e1 = count_ngrams(ss1, TN, CF, n)[1]
-  e2 = count_ngrams(ss2, TN, CF, n)[1]
-
-  # return the intersection
-  return(intersect(as.matrix(e1), as.matrix(e2)))
-
-}
-
-rr_grams <- function(o,TN, CF, N, R) {
-  # N - max length of ngram
-  # R = threshold for repetition
-
-
-
-
-}
-
-# Ideas for regex work
-# https://stackoverflow.com/questions/35704369/identify-repetitive-pattern-in-numeric-vector-in-r-with-fuzzy-search
-
-# sapply(1:(length(x)/2), function(m) sum(rep(x[1:m], length = length(x)) != x))
-
-# x <- rep(c(1, 4, 2), 10)
-# for(k in seq_len(length(x)/2)) {
-#   pat <- x[1:k]
-#   if (identical(rep(pat, length = length(x)), x)) {
-#     print(pat)
-#     break
-#   }
-# }
-## [1] 1 4 2

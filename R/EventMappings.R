@@ -5,7 +5,13 @@
 #'
 #' @param mapname name of map attempting to be created
 
+# TODO:
+# Create, Delete, Export_Rdata, Export_Csv -- all need to validate whether entry exist before running
+
 check_map_name <- function(mapname){
+
+	# TODO: clean this up
+
     if (mapname %in% get_event_mapping_name_list()){
       existingMap = TRUE
     } else {
@@ -22,45 +28,61 @@ get_event_mapping_name_list <- function(){
   return(n)
   }
 
-store_event_mapping <- function(EventMapName, e){
 
-	 # TODO: add validation here
+add_event_mapping <- function(eventMap) {
+
+	# this will be where we actually add this list
+
+	# first validate that eventMap['name'] is not in event_map_names
+	# using check_map_name
+
+	# then add the mapping
+
+	GlobalEventMappings <<- append(list(eventMap), GlobalEventMappings)
+
+}
+
+
+# TEMP -- REMOVE THIS WHEN DEPRECATED
+store_event_mapping <- function(EventMapName, e){
 
   # Add the mapping to the global list of mappings. Sort by threadNum and seqNum
   em = list(name = paste(EventMapName), threads = e[order(e[['threadNum']],e[['seqNum']]),])
 
-  GlobalEventMappings <<- append(list(em), GlobalEventMappings )
+  # GlobalEventMappings <<- append(list(em), GlobalEventMappings )
 
   return(em)
 
 }
 
-get_event_mapping_threads <- function( mapname){
+get_event_mapping_threads <- function(mapname){
+
+	# TODO: review this function
 
   idx <- which(mapname==get_event_mapping_name_list() )
 
-  # print(idx)
   if (idx==0) {
-    print('mapname not found for threads')
     return(NULL)
-  }
-  else
-  return(GlobalEventMappings[[idx]][["threads"]])
+  } else {
+  	return(GlobalEventMappings[[idx]][["threads"]])
+	}
 }
 
-delete_event_mapping <- function( mapname){
+delete_event_mapping <- function(mapname){
+
+	# TODO: validate that mapname exists via check_map_name
 
   # get the index for the mapname
-  idx <- which(mapname==get_event_mapping_name_list() )
+  idx <- which(mapname==get_event_mapping_name_list())
 
-  GlobalEventMappings[[idx]] <<-NULL
+  GlobalEventMappings[[idx]] <<- NULL
 
 }
 
 
 export_event_mapping_rdata <- function(mapname){
 
-  nicename = paste0("EventMap_",mapname)
+  nicename <- paste0("EventMap_",mapname)
 
   assign(nicename, get_event_mapping_threads(mapname))
 
@@ -68,11 +90,11 @@ export_event_mapping_rdata <- function(mapname){
 
 }
 
-export_event_mapping_csv <- function( mapname){
+export_event_mapping_csv <- function(mapname){
 
-  output = as.data.frame(get_event_mapping_threads(mapname))
+  output <- as.data.frame(get_event_mapping_threads(mapname))
 
-  output[grep('V_',colnames(output))]<-NULL
+  output[grep('V_',colnames(output))] <- NULL
 
   write.csv(output, file=file.choose(), quote = TRUE, row.names = FALSE)
 
