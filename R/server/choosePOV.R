@@ -40,4 +40,19 @@ output$ContextFlowers_Events <- renderPlotly({
 
 #### Review Data sub-tab ####
 
+# put "save dataset" button and text input here
+# the thing to save will be "newEventMap"
+# TODO: update ui/choosePOV.R accordingly; and update server.R with function to run the saveEventMap function from Event_Mappings.R
+# mapping name and go button
+# TODO: prevent button from working if nothing is selected / no eventMap var created yet
+output$chunk_controls_X <- renderUI({
+    tags$div(
+        align = "left",
+        textInput("EventMapNameX", label = h4("Enter label to save result")),
+        actionButton("EventButtonX", "Create New Mapping"),
+        span(textOutput("EventValidateX"), style="color:red")
+    )
+})
+
+
 output$DisplayThreadPOV <- DT::renderDataTable({generateBaseThreadOcc()})

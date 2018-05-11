@@ -2,6 +2,7 @@ tabPanel(value = "choosePOV",
     "Choose POV",
     helpText('Select columns from your data to define your point of view.'),
     tags$hr(),
+	uiOutput("chunk_controls_X"), # JUST HERE FOR NOW
     tabsetPanel(
         id = "tabs",
         tabPanel(value = "defineThreads",
