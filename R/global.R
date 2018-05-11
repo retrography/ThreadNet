@@ -31,6 +31,7 @@ source("ThreadNet_Graphics.R")
 source("ThreadNet_Metrics.R")
 source("InputData.R")
 source("EventMappings.R")
+source("NGrams.R")
 
 # visualization types for UI dropdowns
 visualizations <- c(
