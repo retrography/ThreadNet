@@ -92,9 +92,8 @@ server <- shinyServer(function(input, output, session) {
 		validate(need(get_THREAD_CF() != "", "You must select at least one Thread"))
         validate(need(get_EVENT_CF()  != "", "You must select at least one Event"))
 
-		# TODO:
-		# Globally available -- button will need to add "newThreadData" with a new name
-		newThreadData <<- ThreadOccByPOV(selectOccFilter(), get_THREAD_CF(), get_EVENT_CF())
+		# This is the processed newEventMap data to display
+		newThreadData <- ThreadOccByPOV(selectOccFilter(), get_THREAD_CF(), get_EVENT_CF())
 
 		# once everything is returned, show the other tabs
 		# TODO: make these conditional panels based on GlobalEventList has at least one element?
@@ -190,6 +189,15 @@ server <- shinyServer(function(input, output, session) {
 	# Button click event functions #
 	################################
 
+	# Test button for "new map" on choosePOV
+	observeEvent(input$EventButtonX,{
+		rv$newmap <- rv$newmap+1 # trigger reactive value
+		isolate(
+			add_event_mapping(newEventMap)
+		)
+		output$EventValidateX <- renderText("OK")
+	}, ignoreInit = TRUE)
+
 	observeEvent( input$EventButton2,{
 		rv$newmap <- rv$newmap+1 # trigger reactive value
 		isolate(
@@ -263,6 +271,7 @@ server <- shinyServer(function(input, output, session) {
 	}, ignoreInit = TRUE)
 
 	# Delete an Event Mapping
+	# TODO: if delete all, then go back to choosePOV and hide other tabs
 	observeEvent(input$DeleteMappingButton,{
 		rv$newmap <- rv$newmap+1 # trigger reactive value
 		delete_event_mapping(input$ManageEventMapInputID)

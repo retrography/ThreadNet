@@ -627,14 +627,18 @@ clusterEvents <- function(e, NewMapName, cluster_method, event_CF,what_to_return
   else
   {newmap=cbind(e, zm)}
 
-	# TODO: store_event_mapping only returns the data we need right now; it does not store it
-  if (!NewMapName=="")  {eventMap = store_event_mapping( NewMapName, newmap ) }
+  if (!NewMapName=="")  {
+		# TODO: make eventMap global here so we can get it
+		# and just manually do what "store_event_mapping" was returning
+		# This "creates" a new EventMap, using the old list method. It has not yet been saved to the EventMap List
+		newEventMap <<- list(name = paste(NewMapName), threads = newmap[order(newmap[['threadNum']],newmap[['seqNum']]),])
+	}
 
    # return the cluster solution for display
   if (what_to_return=='cluster') # TODO: review what 'clust' is, and when/why it gets returned
     {return(clust)}
   else
-    {return(eventMap[['threads']])} # TODO: see Event_Map function to return threads from a given event map
+    {return(newEventMap[['threads']])} # TODO: see Event_Map function to return threads from a given event map
 }
 
 # this function pulls computes their similarity of chunks based on sequence
