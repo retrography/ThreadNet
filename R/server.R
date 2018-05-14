@@ -143,10 +143,6 @@ server <- shinyServer(function(input, output, session) {
 		get_event_mapping_threads(input$ChunkInputMapID)
 	})
 
-	observeEvent(input$tabs, {
-
-	})
-
 	# this function runs when you push the button to create a new mapping based on chunks
 	observeEvent( input$EventButton2,
     if (check_map_name(input$EventMapName2)){
