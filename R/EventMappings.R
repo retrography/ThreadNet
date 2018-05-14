@@ -44,6 +44,7 @@ add_event_mapping <- function(eventMap) {
 
 
 # TEMP -- REMOVE THIS WHEN DEPRECATED
+# FIND EVERYTHING THAT CALLS THIS, SEE THAT IT GETS THE RETURN, AND USE THE ABOVE FUNCTION
 store_event_mapping <- function(EventMapName, e){
 
   # Add the mapping to the global list of mappings. Sort by threadNum and seqNum
