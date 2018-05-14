@@ -6,6 +6,10 @@
 # Absolutely no warranty!
 ##########################################################################################################
 
+# graphic functions used in Shiny App.
+# some plotly, but some from other packages
+library(plotly)
+
 ###### Pie charts for context factors  ####
 # It would be nice to display some other helpful information, perhaps (like the % of possible combinations that occur)
 
@@ -14,7 +18,7 @@
 #' When selecting contextual factors that define threads, events and comparisons, this function provide visual feedback about the number of factors levels
 #' and also the number of levels when the factors are combined
 #'
-#' @family Graphics
+#' @family ThreadNet_Graphics
 #'
 #' @param oc data frame of occurrences
 #' @param CF list of contextual factors (columns) to include in the display
@@ -201,7 +205,7 @@ CF_multi_pie_event <- function(o, e,CF,r, zm){
 #'
 #' Creates a plotly chart of threads in either clock time or event time, depending on the timescale parameter.
 #'
-#' @family Graphics
+#' @family ThreadNet_Graphics
 #'
 #' @param or Dataframe of threads
 #' @param TN name of column with thread number
@@ -251,7 +255,7 @@ threadMap <- function(or, TN, timescale, CF, shape){
 #'
 #' Shows the n-grams within a set of threads (but not splitting across threads). This provides a visual indication of how repetitive the threads are.
 #'
-#' @family Graphics
+#' @family ThreadNet_Graphics
 #'
 #' @param o a dataframe of occurrences or events
 #' @param TN the column that contains the threadNum
@@ -305,7 +309,7 @@ ng_bar_chart_freq <- function(ngdf){
 #'
 #' Should be replaced with a more expressive layout in plotly
 #'
-#' @family Graphics
+#' @family ThreadNet_Graphics
 #'
 #' @param et dataframe with the threads to be graphed
 #' @param TN the column with the threadNumber
@@ -375,7 +379,7 @@ eventNetwork <- function(et, TN, CF, timesplit){
 
 #' NetworkD3 layout for event network
 #'
-#' @family Graphics
+#' @family ThreadNet_Graphics
 #'
 #' @param n = list with data frames for nodes and edges
 #'
@@ -403,7 +407,7 @@ forceNetworkD3 <- function(n){
 #' Produce a set set of comparison sub-plots in an array.  Ideally, we should be able to use any of the plots. So far it is only bar charts.
 #' This is a prototype that could use rather extensive redesign...
 #'
-#' @family Graphics
+#' @family ThreadNet_Graphics
 #'
 #' @param e dataframe with threads to be plotted
 #' @param o dataframe with the original data

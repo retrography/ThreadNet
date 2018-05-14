@@ -2,7 +2,7 @@
 
 #### Define Threads sub-tab ####
 
-output$selectThreads <- renderUI({
+output$POV_Tab_Controls_2 <- renderUI({
 	checkboxGroupInput(
 		"THREAD_CF_ID",
 		"Select columns to define threads:",
@@ -12,7 +12,7 @@ output$selectThreads <- renderUI({
 	)
 })
 
-output$ContextFlowers_Threads <- renderPlotly({
+output$ContextFlowers_2 <- renderPlotly({
 	CF_multi_pie(
 		selectOccFilter(),
 		get_THREAD_CF()
@@ -21,7 +21,7 @@ output$ContextFlowers_Threads <- renderPlotly({
 
 #### Define Events sub-tab ####
 
-output$selectEvents <- renderUI({
+output$POV_Tab_Controls_3 <- renderUI({
 	checkboxGroupInput(
 		"EVENT_CF_ID",
 		"Select columns to mark events:",
@@ -31,28 +31,27 @@ output$selectEvents <- renderUI({
 	)
 })
 
-output$ContextFlowers_Events <- renderPlotly({
+output$ContextFlowers_3 <- renderPlotly({
 	CF_multi_pie(
 		selectOccFilter(),
 		get_EVENT_CF()
 	)
 })
 
-#### Review Data sub-tab ####
+#### Preview Threads sub-tab ####
 
-# put "save dataset" button and text input here
-# the thing to save will be "newEventMap"
-# TODO: update ui/choosePOV.R accordingly; and update server.R with function to run the saveEventMap function from Event_Mappings.R
-# mapping name and go button
-# TODO: prevent button from working if nothing is selected / no eventMap var created yet
-output$chunk_controls_X <- renderUI({
-    tags$div(
-        align = "left",
-        textInput("EventMapNameX", label = h4("Enter label to save result")),
-        actionButton("EventButtonX", "Create New Mapping"),
-        span(textOutput("EventValidateX"), style="color:red")
-    )
+output$previewThreadMap_1 <- renderPlotly({
+	threadMap(
+		threadedOcc(),
+		"threadNum",
+		"tStamp",
+		newColName(get_EVENT_CF()),
+		16
+	)
 })
 
+output$Preview_Thread_Output_1 <- renderText({ paste(numThreads(threadedOcc(), "threadNum"),"threads in the selected data.")})
 
-output$DisplayThreadPOV <- DT::renderDataTable({generateBaseThreadOcc()})
+#### Preview Data sub-tab ####
+
+output$Thread_Tab_Output_1 <- DT::renderDataTable({ threadedOcc()})

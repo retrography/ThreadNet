@@ -6,17 +6,17 @@
 # Absolutely no warranty!
 ##########################################################################################################
 
-# load dependencies
+# 15 October Point of view code has solidified somewhat
+# 20 October Starting on NetworkD3
+
 library(shiny)
-library(shinyjs)
-library(networkD3)
-library(visNetwork)
 library(plotly)
 library(tidyverse)
 library(ngram)
 library(stringr)
 library(stringdist)
 library(ggplot2)
+library(networkD3)
 library(xesreadR)
 library(colorspace)
 library(igraph)
@@ -24,30 +24,15 @@ library(DT)
 library(RColorBrewer)
 library(lubridate)
 
-# load functions
+# this is another change
+
 source("ThreadNet_Core.R")
 source("ThreadNet_Misc.R")
-source("ThreadNet_Metrics.R")
 source("ThreadNet_Graphics.R")
-source("InputData.R")
-source("EventMappings.R")
-source("NGrams.R")
+source("ThreadNet_Metrics.R")
 
-# visualization types for UI dropdowns
-visualizations <- c(
-	'Threads (event time)',
-	'Threads (actual time)',
-	'Threads (relative time)',
-	'Event network (circle)',
-	'Event network (force)',
-	'Other networks',
-	'Role Maps',
-	'Thread Trajectories'
-)
+# Global variables, config settings, etc. can be defined here
 
-# app environment options
-options(warn=-1) # suppress plotly warnings
-options(shiny.maxRequestSize=30*1024^2) # increase size limit for file upload
+# This is where we store the list of event mappings.  Reactive bindings are added in server.R
+GlobalEventMappings <<-list()
 
-# The list of event mappings
-GlobalEventMappings <- list()

@@ -1,8 +1,6 @@
 # Server Output Functions for Visualize Tab
 
-#### Main Tab Functions ####
-
-get_Zoom_VIZ <- get_Zoom(VisualizeEventMapInputID(),VisualizeTabZoomID())
+#### Main Tab Output Functions ####
 
 # Controls for the whole set of tabs
 output$Visualize_Tab_Controls_1 <- renderUI({
@@ -130,8 +128,6 @@ output$forceNetworkD3 <- renderForceNetwork({
 output$networkPie <- renderPlotly({
 	req(input$Group)
 	get_group <- input$Group
-	# TODO: review this -- should pull from saved eventMap, not threadedOCC() which runs at data load stage
-	# threadedOcc is now generateBaseThreadOcc() -- for reference when reviewing this
 	CF_multi_pie_event(threadedOcc(), threadedEventsViz(), get_EVENT_CF(), get_group, get_Zoom_VIZ())
 })
 

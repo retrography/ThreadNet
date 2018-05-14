@@ -1,11 +1,10 @@
-# Server output functions for readData tab
+# Server Output Functions for Read Data Tab
 
-# Custom UI element to select an input file
-output$inputFileSelector <- renderUI({
+output$Data_Tab_Controls_1 <- renderUI({
 	tags$div(
 		align = "center",
 		fileInput(
-			"inputFile",
+			"file1",
 			"Please select a .csv file",
 			accept = c(
 				"text/csv",
@@ -16,8 +15,7 @@ output$inputFileSelector <- renderUI({
 	)
 })
 
-# Custom UI element to select columns for display
-output$initialDataColumns <- renderUI({
+output$Data_Tab_Controls_2 <- renderUI({
 	checkboxGroupInput(
 		"CFcolumnsID",
 		"Select columns to include in analysis:",
@@ -27,9 +25,9 @@ output$initialDataColumns <- renderUI({
 	)
 })
 
-# Display the initial dataset
-output$initialDataDisplay <- DT::renderDataTable(
-	selectOcc(),
+
+output$Data_Tab_Output_2 <- DT::renderDataTable({
+	selectOcc() },
 	filter = "top",
 	options = list(autoWidth = TRUE)
 )

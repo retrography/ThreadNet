@@ -1,13 +1,5 @@
 # Server Output Functions for Subsets and Mapping Tab
 
-# General Functions
-
-get_Zoom_freqNgram <- get_Zoom(freqNgramInputMapID(),freqNgramZoomID())
-get_Zoom_CHUNK     <- get_Zoom(ChunkInputMapID(),chunkZoomID())
-get_Zoom_REGEX     <- get_Zoom(RegExInputMapID(),regexZoomID())
-
-regexInputEvents <- get_event_mapping_threads(RegExInputMapID())
-
 #### Contextual Chunks sub-tab ####
 
 output$chunk_controls_0 <- renderUI({
