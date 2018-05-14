@@ -1,6 +1,8 @@
 # Server Output Functions for Visualize Tab
 
-#### Main Tab Output Functions ####
+#### Main Tab Functions ####
+
+get_Zoom_VIZ <- get_Zoom(VisualizeEventMapInputID(),VisualizeTabZoomID())
 
 # Controls for the whole set of tabs
 output$Visualize_Tab_Controls_1 <- renderUI({

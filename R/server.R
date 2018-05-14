@@ -137,9 +137,6 @@ server <- shinyServer(function(input, output, session) {
 		get_event_mapping_threads(input$ChunkInputMapID)
 	})
 
-	# get the data that will be the input for this tab
-	regexInputEvents <- reactive(get_event_mapping_threads(input$RegExInputMapID))
-
 	# get the input values and return data frame with regex & label
 	regexInput <- reactive({
 		data.frame(
@@ -149,16 +146,14 @@ server <- shinyServer(function(input, output, session) {
 		)
 	})
 
-	# get the data that will be the input for this tab
-	freqNgramInputEvents <- reactive(get_event_mapping_threads( input$freqNgramInputMapID))
 
 	fng_select <- reactive(
 		support_level(
-			thread_text_vector(freqNgramInputEvents(),'threadNum',get_Zoom_freqNgram(),' '),
+			thread_text_vector(freqNgramInputEvents(),'threadNum',get_Zoom(freqNgramInputMapID(),freqNgramZoomID()),' '),
 			frequent_ngrams(
 				freqNgramInputEvents() ,
 				'threadNum',
-				get_Zoom_freqNgram(),
+				get_Zoom(freqNgramInputMapID(),freqNgramZoomID()),
 				input$freqNgramRange[1],
 				input$freqNgramRange[2],
 				TRUE
@@ -178,27 +173,11 @@ server <- shinyServer(function(input, output, session) {
 		)
 	})
 
-	# Get data for the Visualize tab.Need parallel functions for the other tabs.
-	subsetEventsViz <- reactive({get_event_mapping_threads( input$SelectSubsetMapInputID ) })
-
-	# Get data for the COMPARE tab mapping A
-	threadedEventsComp_A <- reactive({get_event_mapping_threads(input$CompareMapInputID_A ) })
-
-	# Get data for the COMPARE tab mapping B.
-	threadedEventsComp_B <- reactive({get_event_mapping_threads( input$CompareMapInputID_B ) })
-
-	# Get data for the Diachronic COMPARE tab.
-	threadedEventsDiaComp <- reactive({get_event_mapping_threads(input$DiaCompareMapInputID ) })
-
-	CF_levels <- reactive( get_CF_levels( threadedEventsDiaComp(),input$selectComparisonID) )
+	CF_levels <- reactive( get_CF_levels(threadedEventsDiaComp(),input$selectComparisonID))
 
 	# Get data for the Moving Window tab.
-	threadedEventsMove   <- reactive({get_event_mapping_threads(input$MovingWindowMapInputID )})
 	threadedEventsMove_A <- reactive({get_moving_window(threadedEventsMove(),input$MovingWindowSizeID,input$WindowLocation_A_ID) })
 	threadedEventsMove_B <- reactive({get_moving_window(threadedEventsMove(),input$MovingWindowSizeID,input$WindowLocation_B_ID ) })
-
-	# Get data for the Visualize tab.  Need parallel functions for the other tabs.
-	threadedEventsViz_ALL <- reactive({  get_event_mapping_threads( input$VisualizeEventMapInputID ) })
 
 	threadedEventsViz <- reactive({
 		loc   <- input$VisualizeRangeID[1]
@@ -262,12 +241,12 @@ server <- shinyServer(function(input, output, session) {
 		rv$newmap <- rv$newmap+1 # trigger reactive value
 		isolate(
 			OccToEvents3(
-				regexInputEvents(),
+				get_event_mapping_threads(RegExInputMapID())
 				input$EventMapName3,
 				get_EVENT_CF(),
 				get_COMPARISON_CF(),
 				'threadNum',
-				get_Zoom_REGEX(),
+				get_Zoom(RegExInputMapID(),regexZoomID()),
 				regexInput(),
 				input$KeepIrregularEvents
 			)
@@ -328,7 +307,7 @@ server <- shinyServer(function(input, output, session) {
 				get_EVENT_CF(),
 				get_COMPARISON_CF(),
 				'threadNum',
-				get_Zoom_freqNgram(),
+				get_Zoom(freqNgramInputMapID(),freqNgramZoomID()),
 				selected_ngrams(),
 				input$KeepIrregularEvents_2
 			)
