@@ -23,7 +23,6 @@
 #'
 #' @export
 
-# TODO: review the two "threads_to_network" functions here -- should only be one
 
 threads_to_network <- function(et,TN,CF,timesplit){
   et$time = et[[timesplit]]
@@ -153,6 +152,38 @@ threads_to_network_original <- function(et,TN,CF,grp='threadNum'){
   return(list(nodeDF = nodes, edgeDF = edges))
 }
 
+# Counting ngrams is essential to several ThreadNet functions
+#' Counts ngrams in a set of threads
+#'
+#' This function counts n-grams within threads where the length of the thread is greater than n.
+#' @family ThreadNet_Core
+#'
+#' @param o dataframe containing threads
+#' @param TN name of column in dataframe that contains a unique thread number for each thread
+#' @param CF name of the column in dataframe that contains the events that will form the nodes of the network
+#' @param n length of ngrams to count
+#'
+#' @return a dataframe with ngram, frequency and proportion in descending order
+#'
+#' @export
+count_ngrams <- function(o,TN,CF,n){
+
+  # Need a vector of strings, one for each thread, delimited by spaces
+  # the function long_enough filters out the threads that are shorter than n
+  # use space for the delimiter here
+  text_vector = long_enough( thread_text_vector(o,TN,CF,' '), n, ' ')
+
+  # print("text_vector")
+  # print(text_vector)
+
+  ng = get.phrasetable(ngram(text_vector,n))
+
+  # add a column here for the length of the ngram -- useful later!
+  ng$len = n
+
+  return(ng)
+}
+
 
 #################################################################
 #
@@ -171,114 +202,143 @@ threads_to_network_original <- function(et,TN,CF,grp='threadNum'){
 #'@export
 ThreadOccByPOV <- function(o,THREAD_CF,EVENT_CF){
 
-	withProgress(message = "Creating Events", value = 0,{
+  withProgress(message = "Creating Events", value = 0,{
 
-    	n = 5
+    n = 5
 
-    	# make sure there is a value
-		# TODO: improve this with validate and test for !is.null()
-    	if (length(THREAD_CF) == 0 | length(EVENT_CF)==0){return(data.frame())}
+    # make sure there is a value
+    if (length(THREAD_CF) == 0 | length(EVENT_CF)==0){return(data.frame())}
 
-    	incProgress(1/n)
+    incProgress(1/n)
 
-    	# Sort by POV and timestamp. The idea is to get the stream of activities from
-    	# a particular point of view (e.g., actor, location, etc.)
-    	# add the new column that combines CFs, if necessary
-		# this could be a function
-		# also all these functions related to making the new event map could be in a special file
+    # Sort by POV and timestamp. The idea is to get the stream of activities from
+    # a particular point of view (e.g., actor, location, etc.)
+    # add the new column that combines CFs, if necessary
 
-    	# get a new column name based on the thread_CF -- use this to define threads
-    	nPOV <- newColName(THREAD_CF)
-    	occ  <- combineContextFactors(o,THREAD_CF, nPOV )
+    # get a new column name based on the thread_CF -- use this to define threads
+    nPOV = newColName(THREAD_CF)
+    occ = combineContextFactors(o,THREAD_CF, nPOV )
 
-    	# The event context factors define the new category of events within those threads
-    	occ <- combineContextFactors(occ,EVENT_CF,newColName(EVENT_CF))
-    	occ <- occ[order(occ[nPOV],occ$tStamp),]
+    # print("nPOV")
+    # print(nPOV)
+    #
+    # print("THREAD_CF")
+    # print(THREAD_CF)
 
-    	# add two columns to the data frame
-    	occ$threadNum <- integer(nrow(occ))
-    	occ$seqNum    <- integer(nrow(occ))
+    # The event context factors define the new category of events within those threads
+    occ = combineContextFactors(occ,EVENT_CF,newColName(EVENT_CF))
+    occ = occ[order(occ[nPOV],occ$tStamp),]
 
-   		# add new column called label - just copy the new combined event_CF column
-    	occ$label <- occ[[newColName(EVENT_CF)]]
+    # add two columns to the data frame
+    occ$threadNum = integer(nrow(occ))
+    occ$seqNum =   integer(nrow(occ))
 
-    	# occurrences have zero duration
-    	occ$eventDuration <- 0
+    # add new column called label - just copy the new combined event_CF column
+    occ$label = occ[[newColName(EVENT_CF)]]
 
-    	# Also add columns for the time gapsthat appear from this POV
-    	occ$timeGap <- diff_tStamp(occ$tStamp)
 
-    	# create new column for relative time stamp. Initialize to absolute tStamp and adjust below
-    	occ$relativeTime <- lubridate::ymd_hms(occ$tStamp)
+    # occurrences have zero duration
+    occ$eventDuration = 0
 
-    	# then get the unique values in that POV
-    	occ[nPOV] <- as.factor(occ[,nPOV])
-    	pov_list  <- levels(occ[[nPOV]])
+    # Also add columns for the time gapsthat appear from this POV
+    occ$timeGap  =  diff_tStamp(occ$tStamp)
 
-    	incProgress(2/n)
 
-    	# now loop through the pov_list and assign values to the new columns
-    	start_row <- 1
-    	thrd      <- 1
+    # create new column for relative time stamp. Initialize to absolute tStamp and adjust below
+    occ$relativeTime = lubridate::ymd_hms(occ$tStamp)
 
-		# TODO: convert to apply with function
-    	for (p in pov_list){
+    # then get the unique values in that POV
+    occ[nPOV] = as.factor(occ[,nPOV])
+    pov_list = levels(occ[[nPOV]])
 
-      		# get the length of the thread
-      		tlen <- sum(occ[[nPOV]]==p)
+    incProgress(2/n)
 
-      		# guard against error
-      		if (tlen>0){
+    # now loop through the pov_list and assign values to the new columns
+    start_row=1
+    thrd=1
+    for (p in pov_list){
 
-        		# compute the index of the end row
-        		end_row <- start_row+tlen-1
+      # get the length of the thread
+      tlen = sum(occ[[nPOV]]==p)
 
-        		# they all get the same thread number and incrementing seqNum
-        		occ[start_row:end_row, "threadNum"] <- as.matrix(rep(as.integer(thrd),tlen))
-        		occ[start_row:end_row, "seqNum"] <- as.matrix(c(1:tlen))
+      # print(paste('start_row=',start_row))
+      # print(paste('thrd =', thrd ))
+      # print(paste('p =', p ))
+      # print(paste('tlen =', tlen ))
 
-        		# find the earliest time value for this thread
-        		start_time <- min(lubridate::ymd_hms(occ$tStamp[start_row:end_row]))
+      # guard against error
+      if (tlen>0){
 
-        		# increment the counters for the next thread
-        		start_row <- end_row + 1
-        		thrd      <- thrd+1
-      		} # tlen>0
-    	}
+        #compute the index of the end row
+        end_row = start_row+tlen-1
+        # print(paste('start_row =', start_row ))
+        # print(paste('end_row =',end_row  ))
 
-    	incProgress(3/n)
+        # they all get the same thread number and incrementing seqNum
+        occ[start_row:end_row, "threadNum"] <- as.matrix(rep(as.integer(thrd),tlen))
+        occ[start_row:end_row, "seqNum"] <- as.matrix(c(1:tlen))
 
-    	# split occ data frame by threadNum to find earliest time value for that thread
-    	# then substract that from initiated relativeTime from above
-     	occ_split <- lapply(split(occ, occ$threadNum), function(x) {x$relativeTime = x$relativeTime - min(lubridate::ymd_hms(x$tStamp)); x})
 
-    	# row bind data frame back together
-     	occ <- data.frame(do.call(rbind, occ_split))
+        # find the earliest time value for this thread
+        start_time = min(lubridate::ymd_hms(occ$tStamp[start_row:end_row]))
+        # print(start_time)
 
-    	#  these are just equal to the row numbers -- one occurrence per event
-    	occ["occurrences"] <- 1:nrow(occ)
 
-    	# now go through and change each of the CF values to a vector (0,0,0,1,0,0,0,0)
-		# TODO: this can be an apply with function
-    	for (cf in EVENT_CF){
-      		# make a new column for each CF
-      		VCF <- paste0("V_",cf)
-      		occ[[VCF]] <- vector(mode = "integer",length=nrow(occ))
+        # increment the counters for the next thread
+        start_row = end_row + 1
+        thrd=thrd+1
+      } # tlen>0
+    }
 
-      		for (r in 1:nrow(occ)){ occ[[r,VCF]] = list(convert_CF_to_vector(occ,cf,r)) }
-    	}
+    incProgress(3/n)
 
-    	incProgress(4/n)
+    # split occ data frame by threadNum to find earliest time value for that thread
+    # then substract that from initiated relativeTime from above
+     occ_split = lapply(split(occ, occ$threadNum), function(x) {x$relativeTime = x$relativeTime - min(lubridate::ymd_hms(x$tStamp)); x})
+    # # row bind data frame back together
+     occ= data.frame(do.call(rbind, occ_split))
 
-		# return events with network cluster added for zooming.
-		# TODO: confirm that map is actually added by the caller of this function
-    	e <- clusterEvents(occ, 'OneToOne', 'Network Proximity', EVENT_CF,'threads')
+    #  these are just equal to the row numbers -- one occurrence per event
+    occ["occurrences"] =   1:nrow(occ)
 
-  	}) # end progress bar
+
+    # now go through and change each of the CF values to a vector (0,0,0,1,0,0,0,0)
+    for (cf in EVENT_CF){
+      #make a new column for each CF
+      VCF = paste0("V_",cf)
+      occ[[VCF]]= vector(mode = "integer",length=nrow(occ))
+
+      for (r in 1:nrow(occ)){
+        occ[[r,VCF]] = list(convert_CF_to_vector(occ,cf,r))
+      }
+    }
+
+    incProgress(4/n)
+
+    # just add the one column with the combined values
+   # occ["ZM_1"] = as.integer(occ[,newColName(EVENT_CF)])
+
+
+    # this will store the event map in the GlobalEventMappings and return events with network cluster added for zooming...
+    e=clusterEvents(occ, 'OneToOne', 'Network Proximity', EVENT_CF,'threads')
+
+  })
+
+  # for debugging, this is really handy
+#   save(occ,e,file="O_and_E_1.rdata")
+
+   print('done converting occurrences...')
+
+   shinyjs::show(selector = "#navbar li a[data-value=visualize]")
+   shinyjs::show(selector = "#navbar li a[data-value=subsets]")
+   shinyjs::show(selector = "#navbar li a[data-value=comparisons]")
+   shinyjs::show(selector = "#navbar li a[data-value=movingWindow]")
+   shinyjs::show(selector = "#navbar li a[data-value=parameterSettings]")
 
    incProgress(5/n)
 
   return( e )
+
 }
 
 
@@ -419,9 +479,9 @@ OccToEvents_By_Chunk <- function(o, m, EventMapName, uniform_chunk_size, tThresh
   e$ZM_1 = as.factor(e$label)
 #  e$ZM_1 = 1:nrow(e)
 
-	# return events with network cluster added for zooming.
-	# TODO: confirm that map is actually added by the caller of this function
-  e <- clusterEvents(e, EventMapName, 'Contextual Similarity', event_CF,'threads')
+  # print(head(e))
+  # this will store the event map in the GlobalEventMappings and return events with network cluster added for zooming...
+  e=clusterEvents(e, EventMapName, 'Contextual Similarity', event_CF,'threads')
 
   # for debugging, this is really handy
   #  save(o,e,file="O_and_E_2.rdata")
@@ -429,6 +489,7 @@ OccToEvents_By_Chunk <- function(o, m, EventMapName, uniform_chunk_size, tThresh
   return(e)
 
 }
+
 
 # this one creates events based on frequent ngrams or regular expressions
 OccToEvents3 <- function(o, EventMapName,EVENT_CF, compare_CF,TN, CF, rx, KeepIrregularEvents){
@@ -573,10 +634,10 @@ OccToEvents3 <- function(o, EventMapName,EVENT_CF, compare_CF,TN, CF, rx, KeepIr
 # cluster_method is either "Sequential similarity" or "Contextual Similarity" or "Network Structure"
 clusterEvents <- function(e, NewMapName, cluster_method, event_CF,what_to_return='cluster'){
 
-	# TODO: allow this to create the eventCluster and gather/return data, but don't attempt to make a new eventMap listing here
-	# the dataset will be returned, and the user will explcitly add a new event
-
   # make sure to cluster on the correct column (one that exists...)
+
+
+
   if (cluster_method=="Sequential similarity")
   { dd = dist_matrix_seq(e) }
   else if (cluster_method=="Contextual Similarity")
@@ -627,18 +688,17 @@ clusterEvents <- function(e, NewMapName, cluster_method, event_CF,what_to_return
   else
   {newmap=cbind(e, zm)}
 
+  # save(newmap,e,zm, file='O_and_E_zoom.rdata')
+
+  # only  store the event map in the GlobalEventMappings if something is filled in
   if (!NewMapName=="")  {
-		# TODO: make eventMap global here so we can get it
-		# and just manually do what "store_event_mapping" was returning
-		# This "creates" a new EventMap, using the old list method. It has not yet been saved to the EventMap List
-		newEventMap <<- list(name = paste(NewMapName), threads = newmap[order(newmap[['threadNum']],newmap[['seqNum']]),])
-	}
+   eventMap = store_event_mapping( NewMapName, newmap ) }
 
    # return the cluster solution for display
-  if (what_to_return=='cluster') # TODO: review what 'clust' is, and when/why it gets returned
+  if (what_to_return=='cluster')
     {return(clust)}
   else
-    {return(newEventMap[['threads']])} # TODO: see Event_Map function to return threads from a given event map
+    {return(eventMap[['threads']])}
 }
 
 # this function pulls computes their similarity of chunks based on sequence
@@ -855,3 +915,156 @@ replace_regex_list <- function(tv, rx ){
   }
   return(tv)
 }
+# same function, but with lapply -- but does not work.
+# replace_regex_list_lapply <- function(tv, rx){
+#
+#   lapply(1:length(tv), function(i){
+#     lapply(1:nrow(rx),function(j){
+#       str_replace_all(tv[i], rx$pattern[j], rx$label[j] )  }
+#     )  })
+# }
+
+# No longer needed?
+# selectize_frequent_ngrams<- function(e, TN, CF, minN, maxN, threshold){
+#
+#   f=str_replace_all(trimws(frequent_ngrams(e, TN, CF, minN, maxN, threshold,TRUE)[,'ngrams'], which=c('right')), ' ',',')
+#   return(f)
+# }
+
+
+# combined set of frequent ngrams
+# add parameter to make maximal a choice
+frequent_ngrams <- function(e, TN, CF, minN, maxN, onlyMaximal=TRUE){
+
+  # initialize the output
+  ng = count_ngrams(e,TN, CF,minN)
+
+  if (maxN > minN){
+    for (i in seq(minN+1,maxN,1)){
+      ng = rbind(ng,count_ngrams(e,TN, CF,i)) }
+  }
+  # remove the rows that happen once and only keep the columns we want
+  ng=ng[ng$freq>1,c('ngrams','freq', 'len')]
+
+  # just take the maximal ones if so desired
+  if (onlyMaximal) { ng=maximal_ngrams(ng)  }
+
+  # return the set sorted by most frequent
+  return(ng[order(-ng$freq),])
+}
+
+# this filters out ngrams that are contained within others ('2 2' is part of '2 2 2')
+
+maximal_ngrams <- function(ng){
+
+  # find out if each ngram is contained in all the others
+  w = lapply(1:nrow(ng), function(i){
+    grep(ng$ngrams[i],ng$ngrams)}
+  )
+
+  # get howMany times each one appears
+  howMany = lapply(1:length(w), function(i){
+    length(w[[i]])}
+  )
+
+  # return the ones that are unique
+  return(ng[which(howMany==1),])
+}
+
+# compute support level for each ngram
+# tv = text vectors for the threads
+# ng = frequent ngrams data frame
+# returns ng data frame with support level added
+support_level <- function(tv, ng) {
+
+  # change the commas back to spaces
+  tv=str_replace_all(tv, ',' , ' ')
+
+  totalN = length(tv)
+
+  # need to remove whitespace from the trailing edge of the ngrams
+  ng$ngrams = trimws(ng$ngrams)
+
+  # find out how many times each ngram is contained in each TV
+  ng$support = unlist(lapply(1:nrow(ng), function(i){
+    length(grep(ng$ngrams[i],tv)) })
+  )/totalN
+
+  # toss in the generativity level
+  ng = generativity_level(tv,ng)
+
+  return(ng)
+}
+
+# compute the generativity = in-degree and out-degree
+generativity_level<- function(tv, ng){
+
+  # for each ngram, look at the next longer size
+  # Find the n+1-grams that match (as in the code for maximal ngrams).
+  # There are two possibilities -- matching in the first or second position
+  # The number of matches in the first position =  the out-degree
+  # The number of matches in the second position =  the in-degree
+  # if so desired, it should be possible to keep a list.
+
+  # problem is that the tokens can be 1-3 characters long, and there are spaces...
+
+  # Big Idea for frequent n-grams: use the DT:: and let people sort, select and apply all the ngrams they want.
+  # Name them using the tokens but with a different delimiter to avoid confusion.  Go Crazy!
+
+  # convert to spaces
+  tv=str_replace_all(tv, ',',' ')
+
+  # first get the range we are looking for
+  nList = unique(ng$len)
+
+  z=list()
+
+  # loop through them
+  for (n in nList){
+
+    # print(paste('n = ',n))
+    #pick the ngrams of length n from the list given
+    ngn= ng[ng$len==n,]
+
+
+    # get ngrams of length n+1 -- make sure the threads are long enough
+    ngplus = get.phrasetable(ngram( long_enough(tv,n+1, ' '), n+1))
+
+    # this picks out the ones that match
+    w = lapply(1:nrow(ngn), function(i){
+      grep(ngn$ngrams[i],ngplus$ngrams)} )
+
+    #print(w)
+    # print('z = ')
+    zplus = lapply(1:nrow(ngn), function(i){
+      str_locate(ngplus$ngrams[w[[i]]],ngn$ngrams[i])  } )
+
+    # print(z)
+
+    z = c(z,zplus)
+
+  }
+
+  # compute the in and out degree
+  ng$in_degree = unlist(lapply(1:nrow(ng), function(i){
+    zm=z[[i]]
+    length( zm[zm[,1]>1,1] )  } ))
+
+  ng$out_degree = unlist( lapply(1:nrow(ng), function(i){
+    zm=z[[i]]
+    length( zm[zm[,1]==1,1] )  } ))
+
+  # ng$generativity = lapply(1:nrow(ng), function(i) {ng$out_degree[i] * ng$in_degree[i]})
+
+  return(ng)
+}
+
+# to avoid errors in count_ngrams, make sure the length of each thread in the text_vector tv is longer than the n-gram size, n
+# this gets used in various places so need to pass in the delimiter
+long_enough = function(tv,n,delimiter){
+
+  return(tv[ unlist(lapply(1:length(tv), function(i) {length(unlist(strsplit(tv[[i]],delimiter)))>=n})) ])
+
+}
+
+# cluster by network path length

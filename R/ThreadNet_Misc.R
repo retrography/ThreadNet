@@ -6,9 +6,176 @@
 # Absolutely no warranty!
 ##########################################################################################################
 
+# Read in, check, and clean up the data
+# need to see "tStamp" in the first column
+#' read_occurrences
+#'
+#' @family ThreadNet_Misc
+#'
+#' @param inFile
+#'
+#' @return dataframe with occurrences
+#' @export
+#'
+#' @examples
+read_occurrences <- function(inFile){
+
+  # if it's null return null, otherwise do the whole thing...
+  if (is.null(inFile))
+    return(NULL)
+
+  # read in the table of occurrences
+  o=read.csv(inFile$datapath)
+
+
+  # check the file format.  Put in humorous example if the format is bad
+  if (check_file_format(o)=="badformat")
+  {o=make_example_DF() }
+  else if (check_file_format(o)=="sequence")
+  {o=add_relative_timestamps(o,"sequence", 1) }
+
+  # clean up the data -- remove blanks, etc.
+  o = cleanOcc(o,cfnames(o))
+
+  shinyjs::show(selector = "#navbar li a[data-value=choosePOV]")
+  shinyjs::hide(selector = "#navbar li a[data-value=visualize]")
+  shinyjs::hide(selector = "#navbar li a[data-value=subsets]")
+  shinyjs::hide(selector = "#navbar li a[data-value=comparisons]")
+  shinyjs::hide(selector = "#navbar li a[data-value=movingWindow]")
+  shinyjs::hide(selector = "#navbar li a[data-value=parameterSettings]")
+  return(o)}
+
+# This could be improved but is an important logical checkpoint
+# just checks that a required field is in the first column
+check_file_format = function(o){
+
+  if ((colnames(o)[1] == "tStamp"))
+    {return("tStamp")}
+  else if ((colnames(o)[1] == "sequence"))
+  {return("sequence")}
+
+  else
+  {return("badformat")}
+}
+
+#' Checks the name attempting to be create against the list of
+#' map names in memory and forces the creation of a new name.
+#'
+#' @param mapname name of map attempting to be created
+
+check_map_name = function(mapname){
+    if (mapname %in% get_event_mapping_name_list()){
+      existingMap = TRUE
+    } else {
+      existingMap = FALSE
+    }
+    return(existingMap)
+  }
+
+
+#' Add relative timestamps
+#'
+#' This function uses the sequence numbers to add a column with time stamp to the data, so that it can be used throughout the rest
+#' of the app, which expects to see a time stamp.  Start time for all threads is the same: "2017-01-01 00:00:00"  Happy New Year!
+#'
+#' @param o   data frame of occurrences
+#' @param SN column containing the sequence numbers
+#' @param tstep time step for events within each thread.  Default is one minute.
+#'
+#' @return  data frame of occurrences
+#' @export
+#'
+#' @examples
+add_relative_timestamps <- function(o, SN, tstep=1){
+
+  startTime <- as.POSIXct("2017-01-01 00:00:00")
+
+  # add the column at the beginning
+  o <- cbind(startTime + 60*as.numeric(as.character(o[[SN]])), o)
+
+  # set the column name
+  colnames(o)[1] <- "tStamp"
+
+  return(o)
+
+}
+
+##  Make an example data frame for display...
+make_example_DF = function(){
+  correct_occ = read.table(text="tStamp actor action object location
+                            '2017-4-7 17:52:04' jimmy tosses ball playground
+                            '2017-4-7 17:52:12' rover fetches ball playground
+                            '2017-5-18 9:05:52' jimmy tosses ball forest
+                            '2017-5-18 9:06:24' rover fetches stick forest
+                            '2017-5-18 9:10:48' jimmy searches ball forest ", header=TRUE)
+}
+
+# this function will clean up the raw occurrence data
+#' Clean up occurrences
+#'
+#' Clean up removes blanks from the data. Blanks cause problems because the n-gram algorithm interprets blanks as seperate tokens.
+#'
+#' @family ThreadNet_Misc
+#' @param o  data frame with occurrences
+#' @param cfnames names of contextual factors (columns) to clean up.
+#'
+#' @return data frame with blanks removed.
+#' @export
+#'
+#' @examples
+cleanOcc = function(o, cfnames){
+
+  withProgress(message = "Cleaning Data", value = 0,{
+
+  'denominator for loop'
+  n = length(o)
+
+  ## clean up the spaces here and make it back into a factor
+  for (cf in cfnames){
+    i = 1
+    o[,cf] = sapply(o[,cf],fixBlanks)
+    o[cf] = factor( o[,cf] )
+    incProgress(i/n)
+     i = i + 1
+  }
+  })
+  # force tStamp into a "YMD_HMS" format
+  o$tStamp = as.character(o$tStamp)
+  o$tStamp = parse_date_time(o$tStamp, c("dmy HMS", "dmY HMS", "ymd HMS"))
+
+  ## Add the category ">other<" for all of the factors to facilitate recoding later
+  # This may not be needed anymore... commented out Dec 3 2017
+  # o <- as.data.frame(lapply(o, addOther))
+
+  # add weekday and month
+  o$weekday = as.factor(weekdays(as.Date(o$tStamp)))
+  o$month = as.factor(months(as.Date(o$tStamp)))
+
+
+  return(o)
+}
+
+## Use this function to remove blanks from the CF data
+fixBlanks = function(s){
+
+  # take out blanks
+  s=str_replace_all(s," ","_")
+
+  if (is.na(s)){
+    s="blank"
+  }
+  return(s)
+}
+
+# NO LONGER NEEDED  12/2017 add the >other< categeory
+# addOther <- function(x){
+#   if(is.factor(x))
+#     return(factor(x, levels=c(levels(x), ">other<")))
+#   return(x) }
+
 #' numThreads counts how many threads in the data set
 #'
-#' Threads must have unique thread numbers for this function to work
+#' Threads must have unique thred numbers for this function to work
 #'
 #' @family ThreadNet_Misc
 #' @param o data frame with occurrences or events
@@ -16,23 +183,22 @@
 #'
 #' @return number of threads
 #' @export
-numThreads <- function(o,TN){length(unique(o[[TN]]))}
+numThreads = function(o,TN) {length(unique(o[[TN]]))}
 
 # Time range for the data set (not really needed but nice)
-timeRange <- function(o){
+timeRange= function(o){
   # get the min/max time in the whole set of occurrences
-  start  <- min(as.POSIXlt.date(o$tStamp))
-  finish <- max(as.POSIXlt.date(o$tStamp))
+  start = min(as.POSIXlt.date(o$tStamp))
+  finish = max(as.POSIXlt.date(o$tStamp))
 
   # take the difference
-  diff <- difftime(finish,start)
-}
+  difftime(finish,start)}
 
 # Put it into a nice phrase
-timeRangePhrase <- function(tr){
-  rangeunits <- attr(tr,"units")
-  result <- paste(floor(as.numeric(tr)),rangeunits,"from start to finish.")
-}
+timeRangePhrase = function(tr){
+  rangeunits = attr(tr,"units")
+  paste(floor(as.numeric(tr)),rangeunits,"from start to finish.")}
+
 
 # this function is used to split up the threads into n ~equal buckets
 make_subsets <- function(d,n){
@@ -42,13 +208,16 @@ make_subsets <- function(d,n){
 # This function takes a slider value and returns a valid column name for zooming
 # if the argument is null, then use ZM_1
 zoomColumn <- function(z){
+  # print(paste("In zoomColumn z=",z))
 
-  if (is.null(z)) {
-		r="ZM_1"
-	} else {
-		r=paste0("ZM_",z)
-	}
-  	return(r)
+  if (is.null(z))
+  {r="ZM_1"}
+  else
+  {r=paste0("ZM_",z)}
+
+  # print(paste("In zoomColumn r=",r))
+
+  return(r)
 }
 
 ######### Functions that return column names #######
@@ -133,6 +302,9 @@ threshold_slider_selected <- function(o){
   return(min(o$timeGap))
 }
 
+
+
+
 #### count the handoffs, but reverse coded -- zero = all different
 diff_handoffs <- function(o){
 
@@ -180,6 +352,9 @@ row_diff_tStamp <- function(this_row){
   return(d)
 }
 
+
+
+
 #' threadSizeTable provides a distribution of the length of threads
 #'
 #' This function should work on either ocurrences or events.
@@ -214,6 +389,9 @@ threadSizeTable <- function(o,TN){
 
   return(s)
 }
+
+
+
 
 #########################################################
 #' convert_TN_to_TramineR
@@ -457,6 +635,87 @@ dual_window_correlation  <- function(e,w,s=1,n=2){
   # return(cbind(df,b_df))
 
 }
+#####################################################
+# GlobalEventMappings is a global variable
+get_event_mapping_name_list <- function(){
+
+  # print(paste('length of gem:',length(GlobalEventMappings)))
+
+  n= unlist(lapply(1:length(GlobalEventMappings),function(i){
+    unlist(GlobalEventMappings[[i]][["name"]]) }))
+
+  # print(n)
+
+  return(n)
+  }
+
+
+store_event_mapping <- function(EventMapName, e){
+
+  # Add the mapping to the global list of mappings. Sort by threadNum and seqNum
+  em = list(name = paste(EventMapName), threads = e[order(e[['threadNum']],e[['seqNum']]),])
+
+  GlobalEventMappings <<- append(list(em), GlobalEventMappings )
+
+  return(em)
+
+}
+
+get_event_mapping_threads <- function( mapname){
+
+  # get the index for the mapname
+  # print (paste0('mapname',mapname))
+
+  idx=which(mapname==get_event_mapping_name_list() )
+
+  # print(idx)
+  if (idx==0) {
+    print('mapname not found for threads')
+    return(NULL)
+  }
+  else
+  return(GlobalEventMappings[[idx]][["threads"]])
+}
+
+delete_event_mapping <- function( mapname){
+
+  # get the index for the mapname
+  idx=which(mapname==get_event_mapping_name_list() )
+
+  GlobalEventMappings[[idx]] <<-NULL
+  # GlobalEventMappings[[idx]][["threads"]] <-NULL
+  # GlobalEventMappings[[idx]][["cluster"]] <-NULL
+
+  print(paste('deleting', mapname, idx))
+  save(GlobalEventMappings, file="eventMappings_after_delete.RData")
+
+
+}
+
+export_event_mapping <- function(mapname){
+
+  nicename = paste0("EventMap_",mapname)
+
+  assign(nicename, get_event_mapping_threads(mapname))
+
+  save(list=nicename, file = paste0(nicename,".Rdata"))
+
+  print(paste(" EventMapping saved in file: ", paste0(nicename,".Rdata")))
+
+}
+
+export_event_mapping_csv <- function( mapname){
+
+  output = as.data.frame(get_event_mapping_threads(mapname))
+
+  output[grep('V_',colnames(output))]<-NULL
+
+  write.csv(output, file=file.choose(), quote = TRUE, row.names = FALSE)
+
+  print(" EventMapping saved as .csv file")
+
+}
+
 
 # Make a nice dataframe to display
 # Issue is that DT::renderdatatable cannot display lists correctly.
@@ -479,9 +738,56 @@ make_nice_event_DT <- function(e){
   return(e)
 }
 
+
+
+
 # find the biggest column with ZM_, and then get the number that goes with that.
 # It will not be the same as the column number.
 zoom_upper_limit <- function(e){
   upper_limit = as.integer(str_replace(colnames(e[max(grep("ZM_",colnames(e)))]),"ZM_",""))
   return(upper_limit)
 }
+
+# sliderInput("ThreadMapZoomID",
+#             "Zoom in and out by event similarity:",
+#             1,100,5, step = 1, ticks=FALSE)
+
+
+
+######################################################
+# Just putting this code here to play with for now.
+# this function finds the common events in two subsets of thread data
+common_events <- function(ss1, ss2, TN, CF, n){
+
+  # get the list of ngrams for each subset of threads
+  e1 = count_ngrams(ss1, TN, CF, n)[1]
+  e2 = count_ngrams(ss2, TN, CF, n)[1]
+
+  # return the intersection
+  return(intersect(as.matrix(e1), as.matrix(e2)))
+
+}
+
+rr_grams <- function(o,TN, CF, N, R) {
+  # N - max length of ngram
+  # R = threshold for repetition
+
+
+
+
+}
+
+# Ideas for regex work
+# https://stackoverflow.com/questions/35704369/identify-repetitive-pattern-in-numeric-vector-in-r-with-fuzzy-search
+
+# sapply(1:(length(x)/2), function(m) sum(rep(x[1:m], length = length(x)) != x))
+
+# x <- rep(c(1, 4, 2), 10)
+# for(k in seq_len(length(x)/2)) {
+#   pat <- x[1:k]
+#   if (identical(rep(pat, length = length(x)), x)) {
+#     print(pat)
+#     break
+#   }
+# }
+## [1] 1 4 2

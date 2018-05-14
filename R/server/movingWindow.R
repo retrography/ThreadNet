@@ -1,7 +1,5 @@
 # Server Output Functions for Moving Window Tab
 
-get_Zoom_MOVE      <- get_Zoom(MovingWindowMapInputID(),MovingWindowZoomID())
-
   output$Moving_Window_Tab_Controls_1 <- renderUI({
     selectizeInput("MovingWindowMapInputID",label = h4("Choose mapping:"), get_event_mapping_names() )
   })

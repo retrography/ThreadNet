@@ -1,8 +1,5 @@
 # Server Output Functions for Comparisons Tab
 
-get_Zoom_COMP_A    <- get_Zoom(CompareMapInputID_A(),CompareZoomID_A())
-get_Zoom_COMP_B    <- get_Zoom(CompareMapInputID_B(),CompareZoomID_B())
-
 # Make two parallel sets of input and data. Different mapping on each side
 
   # ####### SUBSET A   ##########
