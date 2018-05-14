@@ -31,8 +31,19 @@ source("ThreadNet_Misc.R")
 source("ThreadNet_Graphics.R")
 source("ThreadNet_Metrics.R")
 
+# list of visualization options for UI dropdowns
+visualizations <- c(
+	'Threads (event time)',
+	'Threads (actual time)',
+	'Threads (relative time)',
+	'Event network (circle)',
+	'Event network (force)',
+	'Other networks',
+	'Role Maps',
+	'Thread Trajectories'
+)
+
 # Global variables, config settings, etc. can be defined here
 
 # This is where we store the list of event mappings.  Reactive bindings are added in server.R
-GlobalEventMappings <<-list()
-
+GlobalEventMappings <- list()
