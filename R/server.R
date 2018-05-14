@@ -210,6 +210,7 @@ server <- shinyServer(function(input, output, session) {
 
 	# separate the cluster calculation from the dendrogram display
 	cluster_result <- eventReactive(input$EventButton6,{
+		validate(need(!(check_map_name(input$EventMapName6)), paste0('Map Name ',input$EventMapName6,' already exists. Please select a different name.')))
 		rv$newmap <- rv$newmap+1 # trigger reactive value
 		isolate(
 			clusterEvents(
