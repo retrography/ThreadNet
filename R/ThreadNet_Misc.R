@@ -48,8 +48,32 @@ combineContextFactors <- function(threadData,CF,newCol){
 ### FUNCTIONS TO CALCULATE DIFFS ###
 ####################################
 
-# TODO: review who calls these
-# TODO: review use of global variables here
+# names of the columns for contextual factors
+# grab all of the columns except the first, which has the time stamp
+# tStamp in the first column
+#' cfnames provides names of all the contextual factors (except the time stamp)
+#' @family ThreadNet_Misc
+#' @param o data frame with threads
+#'
+#' @return list of column names
+#' @export
+#'
+# DEPRECATED -- REMOVE WHEN NO LONGER CALLED
+cfnames <- function(o){
+  colnames(o)[2:length(colnames(o))]}
+
+## this is used to populate the UI for comparison of categories within a CF
+#' get_CF_levels returns the levels of a contextual factor
+#' @family ThreadNet_Misc
+#' @param o data frame with threads
+#' @param cf  a contextual factors (column)
+#'
+#' @return list of unique factor levels
+#' @export
+get_CF_levels <- function(o,cf){
+
+  return(levels(o[,cf]))
+}
 
 diff_handoffs <- function(o){
 

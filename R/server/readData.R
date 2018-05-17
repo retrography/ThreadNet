@@ -12,21 +12,21 @@ output$fileSelector <- renderUI({
 })
 
 # user selects columns to include
+# [-1] drop first column (tStamp)
 output$columnSelector <- renderUI({
 	checkboxGroupInput(
 		"CFcolumnsID",
 		"Select columns to include in analysis:",
-		# TODO: better way than "cfnames" but need to address occ() first
-		cfnames(occ()),
-		selected = cfnames(occ()),
+		names(occ())[-1],
+		selected = names(occ())[-1],
 		inline = TRUE
 	)
 })
 
 # user filters data for review3
 output$dataFilter <- DT::renderDataTable(
-	selectOcc(), # TODO: this calls occ() -- review
-	filter = "top",
+	selectOcc(),
+	filter  = "top",
 	options = list(autoWidth = TRUE)
 )
 
