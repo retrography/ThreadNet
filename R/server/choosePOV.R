@@ -12,6 +12,7 @@ output$povThreadSelector <- renderUI({
     )
 })
 
+# TODO: review this
 output$ContextFlowers_Threads <- renderPlotly({
 	CF_multi_pie(
 		selectOccFilter(),
@@ -31,6 +32,7 @@ output$povEventSelector <- renderUI({
     )
 })
 
+# TODO: review this
 output$ContextFlowers_Events <- renderPlotly({
 	CF_multi_pie(
 		selectOccFilter(),
@@ -40,25 +42,14 @@ output$ContextFlowers_Events <- renderPlotly({
 
 #### Preview Data sub-tab ####
 
-########
 # The POV tabs reconstruct the data into threads by sorting by tStamp and
 # adding columns for threadNum and seqNum for the selected POV in ThreadOccByPOV
 output$povDataThreads <- DT::renderDataTable({
 
-	# thread occurences by POV
-	threadedOcc()
-})
-
-#### Add new Dataset sub-tab ####
-
-output$addPOV <- renderUI({
-    tags$div(
-        align="left",
-        textInput(
-            "POVMapName",
-            label = h4(paste("Enter label for this POV mapping")),
-            value = ""
-        ),
-        actionButton("addPOVButton", "Save mapping")
-    )
+	# don't call ThreadedOccByPOV unless inputs have been defined
+	validate(need(get_THREAD_CF() != "", "You must select at least one Thread"))
+	validate(need(get_EVENT_CF()  != "", "You must select at least one Event"))
+	
+	# we have inputs: call the fuction to thread occurences by selected POV
+	ThreadOccByPOV(selectOccFilter())
 })
