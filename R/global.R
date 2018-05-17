@@ -6,17 +6,17 @@
 # Absolutely no warranty!
 ##########################################################################################################
 
-# 15 October Point of view code has solidified somewhat
-# 20 October Starting on NetworkD3
-
+# load dependencies
 library(shiny)
+library(shinyjs)
+library(networkD3)
+library(visNetwork)
 library(plotly)
 library(tidyverse)
 library(ngram)
 library(stringr)
 library(stringdist)
 library(ggplot2)
-library(networkD3)
 library(xesreadR)
 library(colorspace)
 library(igraph)
@@ -24,7 +24,7 @@ library(DT)
 library(RColorBrewer)
 library(lubridate)
 
-# visualization types for UI dropdowns
+# options for UI dropdowns
 visualizations <- c(
 	'Threads (event time)',
 	'Threads (actual time)',
@@ -43,7 +43,5 @@ source("ThreadNet_Graphics.R")
 source("ThreadNet_Metrics.R")
 source("Event_Mappings.R")
 
-# Global variables, config settings, etc. can be defined here
-
-# This is where we store the list of event mappings.  Reactive bindings are added in server.R
+# store event mappings
 GlobalEventMappings <- list()
