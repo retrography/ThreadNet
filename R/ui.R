@@ -5,25 +5,15 @@
 # GNU General Public License (GPL-3.0) https://opensource.org/licenses/GPL-3.0?
 # Absolutely no warranty!
 ##########################################################################################################
-# Sept 7, 2017 New Shiny R version using architecture and advice from Ezra Brooks & Pat Bills
-# March 21, 2018 New organization of tabs.
-# May 2, 2018 Separation of tab definitions into files
-
-# pdf(NULL) # prevent plotly errors
-library(shiny)
-library(shinyjs)
-library(networkD3)
-library(visNetwork)
 
 ui <- fluidPage(
+
     useShinyjs(),
 
     # Application title
     tags$h3(align='center', "ThreadNet 3 Development"),
 
-    #  tags$audio( src='tellusastory.mp3',type='audio/mpeg', controls='TRUE'),
-
-    # tab definitions are under "ui" directory
+    # tab-specific definitions are under "ui" directory
     tabsetPanel(
       id="navbar",
         type = "tabs",
