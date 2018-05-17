@@ -75,6 +75,64 @@ get_CF_levels <- function(o,cf){
   return(levels(o[,cf]))
 }
 
+##########################################################################################################
+# this function adds a new column to the occurrences table based on a combination of context factors CF)
+#' Creates a new column that combines some set of other columns
+#'
+#' For example, actor+action
+#'
+#' @family ThreadNet_Misc
+#' @param o data frame with threads
+#' @param CF contextual factors to be combined.
+#' @param newCol  name of the new combined conextual factor
+#'
+#' @return data frame with the new column
+#' @export
+#'
+#' @examples
+combineContextFactors <- function(o,CF,newCol){
+
+
+  # Use the old column if there is one
+  if (!(newCol %in% names(o))) {
+
+    # Need to get the CF parameters into the right format for tidyr::unite function
+    cfn= sapply(CF, as.character)
+    newCol = as.character(newCol)
+
+    #  unite the columns, but keep the old ones
+    o= unite_(o, newCol, cfn, sep="+", remove=FALSE)
+
+  }
+
+  # Coerce the new column into a factor
+  o[newCol] = as.factor(o[,newCol])
+
+  return(o)
+}
+
+# just keep this simple
+newColName <- function(CF_list){
+  return(paste0(CF_list,collapse="_")) }
+
+
+# These were used on the occ-to-event tab to configure the slider
+threshold_slider_min <- function(o){
+  return(floor(min(o$timeGap)))
+}
+
+threshold_slider_max <- function(o){
+  return(ceiling(max(o$timeGap)))
+}
+
+threshold_slider_selected <- function(o){
+  return(min(o$timeGap))
+}
+
+
+
+
+#### count the handoffs, but reverse coded -- zero = all different
 diff_handoffs <- function(o){
 
   # initialize the previous row
