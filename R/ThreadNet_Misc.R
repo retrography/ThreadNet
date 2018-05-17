@@ -65,6 +65,7 @@ zoomColumn <- function(z){
 #' @return list of column names
 #' @export
 #'
+# DEPRECATED -- REMOVE WHEN NO LONGER CALLED
 cfnames <- function(o){
   colnames(o)[2:length(colnames(o))]}
 

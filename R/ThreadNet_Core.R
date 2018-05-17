@@ -329,12 +329,6 @@ ThreadOccByPOV <- function(o,THREAD_CF,EVENT_CF){
 
    print('done converting occurrences...')
 
-   shinyjs::show(selector = "#navbar li a[data-value=visualize]")
-   shinyjs::show(selector = "#navbar li a[data-value=subsets]")
-   shinyjs::show(selector = "#navbar li a[data-value=comparisons]")
-   shinyjs::show(selector = "#navbar li a[data-value=movingWindow]")
-   shinyjs::show(selector = "#navbar li a[data-value=parameterSettings]")
-
    incProgress(5/n)
 
   return( e )
