@@ -2,17 +2,18 @@
 
 #### Define Threads sub-tab ####
 
-output$POV_Tab_Controls_2 <- renderUI({
+output$povThreadSelector <- renderUI({
 	checkboxGroupInput(
-		"THREAD_CF_ID",
-		"Select columns to define threads:",
-		cfnames(selectOccFilter()),
-		selected = get_THREAD_CF(),
-		inline = TRUE
-	)
+        "THREAD_CF_ID",
+        "Select columns to define threads:",
+		get_CF(),
+        selected = "",
+        inline = TRUE
+    )
 })
 
-output$ContextFlowers_2 <- renderPlotly({
+# TODO: review this
+output$ContextFlowers_Threads <- renderPlotly({
 	CF_multi_pie(
 		selectOccFilter(),
 		get_THREAD_CF()
@@ -21,37 +22,34 @@ output$ContextFlowers_2 <- renderPlotly({
 
 #### Define Events sub-tab ####
 
-output$POV_Tab_Controls_3 <- renderUI({
+output$povEventSelector <- renderUI({
 	checkboxGroupInput(
-		"EVENT_CF_ID",
-		"Select columns to mark events:",
-		cfnames(selectOccFilter()),
-		selected = get_EVENT_CF(),
-		inline = TRUE
-	)
+        "EVENT_CF_ID",
+        "Select columns to mark events:",
+		get_CF(),
+		selected = "",
+        inline = TRUE
+    )
 })
 
-output$ContextFlowers_3 <- renderPlotly({
+# TODO: review this
+output$ContextFlowers_Events <- renderPlotly({
 	CF_multi_pie(
 		selectOccFilter(),
 		get_EVENT_CF()
 	)
 })
 
-#### Preview Threads sub-tab ####
-
-output$previewThreadMap_1 <- renderPlotly({
-	threadMap(
-		threadedOcc(),
-		"threadNum",
-		"tStamp",
-		newColName(get_EVENT_CF()),
-		16
-	)
-})
-
-output$Preview_Thread_Output_1 <- renderText({ paste(numThreads(threadedOcc(), "threadNum"),"threads in the selected data.")})
-
 #### Preview Data sub-tab ####
 
-output$Thread_Tab_Output_1 <- DT::renderDataTable({ threadedOcc()})
+# The POV tabs reconstruct the data into threads by sorting by tStamp and
+# adding columns for threadNum and seqNum for the selected POV in ThreadOccByPOV
+output$povDataThreads <- DT::renderDataTable({
+
+	# don't call ThreadedOccByPOV unless inputs have been defined
+	validate(need(get_THREAD_CF() != "", "You must select at least one Thread"))
+	validate(need(get_EVENT_CF()  != "", "You must select at least one Event"))
+	
+	# we have inputs: call the fuction to thread occurences by selected POV
+	ThreadOccByPOV(selectOccFilter())
+})
