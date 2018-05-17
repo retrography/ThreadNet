@@ -268,7 +268,9 @@ ThreadOccByPOV <- function(threadData){
 
   	}) # end progress bar
 
-  	return(results)
+   incProgress(5/n)
+
+  return( e )
 
 }
 
