@@ -78,10 +78,9 @@ server <- shinyServer(function(input, output, session) {
 	})
 
 	# Return a dataframe of occurrences from the user specified inputFile
-	occ <- eventReactive(input$inputFile,read_occurrences(input$inputFile))
+	occ <- eventReactive(input$inputFile,parseInputData(input$inputFile))
 
 	# selected columns from the raw data
-	# TODO: review this (and see server/readData.R")
 	selectOcc <- reactive(occ()[c("tStamp", input$CFcolumnsID)] )
 
 	# select rows using the nice DT input
