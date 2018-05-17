@@ -77,22 +77,15 @@ server <- shinyServer(function(input, output, session) {
 		get_event_mapping_name_list()
 	})
 
-
-	###########################################
-	#### Reactive Functions for Occurences ####
-	###########################################
-
-	# TODO: review to see if any of this can be moved to server/ReadData
-
 	# Return a dataframe of occurrences from the user specified inputFile
-	occ <- eventReactive(input$inputFile,parseInputData(input$inputFile))
+	occ <- eventReactive(input$inputFile,read_occurrences(input$inputFile))
 
 	# selected columns from the raw data
+	# TODO: review this (and see server/readData.R")
 	selectOcc <- reactive(occ()[c("tStamp", input$CFcolumnsID)] )
 
-	# select all rows using the nice DT input
-	# global for general use -- check what else calls this if anything
-	selectOccFilter <<- reactive(selectOcc()[input$dataFilter_rows_all,])
+	# select rows using the nice DT input
+	selectOccFilter <- reactive(selectOcc()[input$dataFilter_rows_all,])
 
 	threadedOcc <- reactive({
 

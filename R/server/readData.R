@@ -1,15 +1,7 @@
-# Server: Read Data functions
-
-##############################
-# Local Variable Definitions #
-##############################
+# Server: Read Data tab functions
 
 # limit what files to accept on input
 fileTypes <- c("text/csv","text/comma-separated-values,text/plain",".csv")
-
-##########################
-# Tab Output Definitions #
-##########################
 
 # file selector dialog
 output$fileSelector <- renderUI({
@@ -20,21 +12,21 @@ output$fileSelector <- renderUI({
 })
 
 # user selects columns to include
-# [-1] drop first column (tStamp)
 output$columnSelector <- renderUI({
 	checkboxGroupInput(
 		"CFcolumnsID",
 		"Select columns to include in analysis:",
-		names(occ())[-1],
-		selected = names(occ())[-1],
+		# TODO: better way than "cfnames" but need to address occ() first
+		cfnames(occ()),
+		selected = cfnames(occ()),
 		inline = TRUE
 	)
 })
 
-# user filters data for review
+# user filters data for review3
 output$dataFilter <- DT::renderDataTable(
-	selectOcc(),
-	filter  = "top",
+	selectOcc(), # TODO: this calls occ() -- review
+	filter = "top",
 	options = list(autoWidth = TRUE)
 )
 
