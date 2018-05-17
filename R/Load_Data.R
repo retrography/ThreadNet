@@ -1,3 +1,11 @@
+##########################################################################################################
+# THREADNET:  Load Data
+
+# This software may be used according to the terms provided in the
+# GNU General Public License (GPL-3.0) https://opensource.org/licenses/GPL-3.0?
+# Absolutely no warranty!
+##########################################################################################################
+
 # Functions relating to loading a raw dataset
 
 # main function that gets called by server.R
