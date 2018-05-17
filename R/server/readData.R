@@ -23,7 +23,7 @@ output$columnSelector <- renderUI({
 	)
 })
 
-# user filters data for review3
+# user filters data for review
 output$dataFilter <- DT::renderDataTable(
 	selectOcc(),
 	filter  = "top",
