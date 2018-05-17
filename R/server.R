@@ -12,14 +12,14 @@ server <- shinyServer(function(input, output, session) {
 	options(shiny.maxRequestSize=30*1024^2)
 
 	# create reactive value to force execution of function that gets map names for menus
-	rv <-reactiveValues(newmap=0)
+	rv <- reactiveValues(newmap=0)
 
 	# get_CF returns the choice of contextual factors from the Data tab.
 	get_CF <<- reactive({ return( input$CFcolumnsID ) })
 
 	# get_POV returns the choice of POV from the POV tab
-	get_THREAD_CF <<- reactive({ return(input$THREAD_CF_ID) })
-	get_EVENT_CF <<- reactive({ return(input$EVENT_CF_ID) })
+	get_THREAD_CF     <<- reactive({ return(input$THREAD_CF_ID) })
+	get_EVENT_CF      <<- reactive({ return(input$EVENT_CF_ID) })
 	get_COMPARISON_CF <<- reactive({ return(setdiff(get_CF(), union(get_THREAD_CF(),get_EVENT_CF() ))) })
 
 	# time scale for use throughout the app
@@ -77,6 +77,11 @@ server <- shinyServer(function(input, output, session) {
 		get_event_mapping_name_list()
 	})
 
+
+	###########################################
+	#### Reactive Functions for Occurences ####
+	###########################################
+
 	# Return a dataframe of occurrences from the user specified inputFile
 	occ <- eventReactive(input$inputFile,parseInputData(input$inputFile))
 
@@ -86,13 +91,19 @@ server <- shinyServer(function(input, output, session) {
 	# select rows using the nice DT input
 	selectOccFilter <- reactive(selectOcc()[input$dataFilter_rows_all,])
 
-	# The POV tabs reconstruct the data into threads by sorting by tStamp and
-	# adding columns for threadNum and seqNum for the selected POV in ThreadOccByPOV
+	# Keeping this function here for now because it is still called in visualize
+	# however this function is deprecated and should be removed when no longer needed
 	threadedOcc <- reactive({
-	  validate(need(input$THREAD_CF_ID != "", "You must select at least one context factor to define Threads"))
-	  validate(need(input$EVENT_CF_ID != "", "You must select at least one context factor to define Events within Threads"))
-	  ThreadOccByPOV( selectOccFilter(), input$THREAD_CF_ID, input$EVENT_CF_ID )
-	  })
+
+		# don't call ThreadedOccByPOV unless inputs have been defined
+		validate(need(input$THREAD_CF_ID != "", "You must select at least one Thread"))
+		validate(need(input$EVENT_CF_ID  != "", "You must select at least one Event"))
+
+		# we have inputs: call the fuction to thread occurences by selected POV
+		ThreadOccByPOV(selectOccFilter())
+	})
+
+	#########################################
 
 	# get the data that will be the input for this tab
 	chunkInputEvents <- reactive({

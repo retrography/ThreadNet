@@ -83,7 +83,7 @@ get_CF_levels <- function(o,cf){
 }
 
 ##########################################################################################################
-# this function adds a new column to the occurrenes table based on a combination of context factors CF)
+# this function adds a new column to the occurrences table based on a combination of context factors CF)
 #' Creates a new column that combines some set of other columns
 #'
 #' For example, actor+action
