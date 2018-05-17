@@ -6,6 +6,14 @@
 # Absolutely no warranty!
 ##########################################################################################################
 
+#####################################################
+# GlobalEventMappings is a global variable
+
+# This software may be used according to the terms provided in the
+# GNU General Public License (GPL-3.0) https://opensource.org/licenses/GPL-3.0?
+# Absolutely no warranty!
+##########################################################################################################
+
 # Checks the name attempting to be create against the list of
 # map names in memory and forces the creation of a new name.
 # TODO: deprecate this function when no longer needed
