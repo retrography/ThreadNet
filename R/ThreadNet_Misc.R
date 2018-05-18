@@ -18,39 +18,9 @@
 #' @export
 numThreads = function(o,TN) {length(unique(o[[TN]]))}
 
-# Time range for the data set (not really needed but nice)
-timeRange= function(o){
-  # get the min/max time in the whole set of occurrences
-  start = min(as.POSIXlt.date(o$tStamp))
-  finish = max(as.POSIXlt.date(o$tStamp))
-
-  # take the difference
-  difftime(finish,start)}
-
-# Put it into a nice phrase
-timeRangePhrase = function(tr){
-  rangeunits = attr(tr,"units")
-  paste(floor(as.numeric(tr)),rangeunits,"from start to finish.")}
-
-
 # this function is used to split up the threads into n ~equal buckets
 make_subsets <- function(d,n){
   return(split(d, ceiling(seq_along(d)/(length(d)/n))))
-}
-
-# This function takes a slider value and returns a valid column name for zooming
-# if the argument is null, then use ZM_1
-zoomColumn <- function(z){
-  # print(paste("In zoomColumn z=",z))
-
-  if (is.null(z))
-  {r="ZM_1"}
-  else
-  {r=paste0("ZM_",z)}
-
-  # print(paste("In zoomColumn r=",r))
-
-  return(r)
 }
 
 ######### Functions that return column names #######
@@ -130,10 +100,13 @@ threshold_slider_selected <- function(o){
   return(min(o$timeGap))
 }
 
+####################################
+### FUNCTIONS TO CALCULATE DIFFS ###
+####################################
 
+# TODO: review who calls these
+# TODO: review use of global variables here
 
-
-#### count the handoffs, but reverse coded -- zero = all different
 diff_handoffs <- function(o){
 
   # initialize the previous row
@@ -142,20 +115,20 @@ diff_handoffs <- function(o){
   return(apply(o,1, row_diff_handoff))
 
 }
+
 row_diff_handoff <- function(this_row){
 
   # just add up the differences.
-  d <-sum(this_row==previous_row)
+  d <- sum(this_row == previous_row)
 
   # store the previous row
-  previous_row <<-this_row
+  previous_row <<- this_row
 
-  # return the number ofdifferences
+  # return the number of differences
   return(d)
 }
 
 
-#### Time gaps -- just pass in the column of time stamps
 diff_tStamp <- function(ts){
 
   # initialize the first row
@@ -164,14 +137,11 @@ diff_tStamp <- function(ts){
   return(sapply(ts, row_diff_tStamp))
 
 }
+
 row_diff_tStamp <- function(this_row){
 
-  # print(paste("this_row",this_row))
-  # print(paste("previous_row",previous_row))
-
-
-  # just add up the differences.
-  d <-max(0,difftime(this_row, previous_row, units="secs"))
+  # add up the differences.
+  d <- max(0,difftime(this_row, previous_row, units="secs"))
 
   # store the previous row
   previous_row <<-this_row
@@ -180,7 +150,7 @@ row_diff_tStamp <- function(this_row){
   return(d)
 }
 
-
+###########################
 
 
 #' threadSizeTable provides a distribution of the length of threads
@@ -196,7 +166,6 @@ row_diff_tStamp <- function(this_row){
 #' @return data frame with table of thread lengths
 #' @export
 threadSizeTable <- function(o,TN){
-
 
   # get the number of threads
   nThreads = nrow(unique(o[TN]))
@@ -218,71 +187,6 @@ threadSizeTable <- function(o,TN){
   return(s)
 }
 
-
-
-
-#########################################################
-#' convert_TN_to_TramineR
-#'
-#' converts the csv format used in ThreadNet to the format used by TraMiner.  Should provide a way to save this, as well.
-#'
-#' @family ThreadNet_Misc
-#' @param df  threads (occurrences or events)
-#' @param TN Column with threadNumber
-#' @param CF Contextual factor that will be used to define the state sequences in TraMineR
-#'
-#' @return Dataframe in TraMineR format (state sequeces in horizontal rows)
-#' @export
-#'
-#' @examples
-convert_TN_to_TramineR <- function(df, TN, CF){
-  # dataframe must be sorted by time or sequence within each threadNumber
-  # TN is the threadnumber
-  # CF is some attribute we will use in TramineR
-
-  # first find the threads
-  threads = unique(df[,TN])
-  nThreads = length(threads)
-
-  # Initialize list of empty lists
-  s = rep( list(list()), nThreads )
-
-  for ( th in 1:nThreads){
-
-    #subset of df that contains the sequence
-    s[[th]] = as.character(df[df[[TN]]==threads[th],CF])
-  }
-
-  # add NA to make all the lists the same length
-  s = lapply(s, `length<-`, max(lengths(s)))
-
-  # convert to data frame
-  df <- data.frame(matrix(unlist(s), nrow=nThreads, byrow=T))
-
-  # add a column for the threadnumber
-  # df[TN] = threads
-
-  return(df)
-
-}
-
-# these functions support the moving window
-#' get_threadList returns a list of all thread numbers
-#'
-#' @family ThreadNet_Misc
-#'
-#' @param e  data frame with threaded events
-#' @param TN Column with threadNumber
-#' @param SN Column with sequence numbers
-#'
-#' @return list of thread numbers
-#' @export
-get_threadList <- function(e,TN,SN){
-
-  # for the current data structure for events, you just pick all of the threads where seqNum == 1
-  return(e[e[[SN]]==1,TN])
-}
-
 #' get_moving_window returns a set of threads for a moving window
 #'
 #' @family ThreadNet_Misc
@@ -296,15 +200,14 @@ get_threadList <- function(e,TN,SN){
 #'
 get_moving_window <- function(e, s, l ){
 
-  # get the list of threads
-  w=get_threadList(e,"threadNum","seqNum")
+    # get the list of threads
+	w <- e[e[[seqNum]]==1,threadNum]
 
-  # get get the appropriate subset of threads for the window
-  w=w[l:(l+s-1)]
+  	# get get the appropriate subset of threads for the window
+  	w <- w[l:(l+s-1)]
 
-  # and now subset the rows for those threads
-
-  return(e[e$threadNum %in% w,])
+  	# and now subset the rows for those threads
+  	return(e[e$threadNum %in% w,])
 
 }
 
@@ -464,74 +367,9 @@ dual_window_correlation  <- function(e,w,s=1,n=2){
 
 }
 
-# Make a nice dataframe to display
-# Issue is that DT::renderdatatable cannot display lists correctly.
-make_nice_event_DT <- function(e){
-
-  # Add new column for the occurrences as a character string for display
-  # tibble::add_column(e, paste(e$occurrences,sep=","), .after=1)
-
-  e$OccurrenceList = paste(e$occurrences,sep=",")
-
-  # move occurences directly after tstamp
-  col_occ = which(colnames(e)=="OccurrenceList")
-  e = e[, c(1, col_occ, (2:ncol(e))[-col_occ])]
-
-  # Now remove the columns that have lists
-  e$occurrences = NULL
-  e$OccurrenceList.1 = NULL
-  e[grep("V_",colnames(e))]=NULL
-
-  return(e)
-}
-
 # find the biggest column with ZM_, and then get the number that goes with that.
 # It will not be the same as the column number.
 zoom_upper_limit <- function(e){
   upper_limit = as.integer(str_replace(colnames(e[max(grep("ZM_",colnames(e)))]),"ZM_",""))
   return(upper_limit)
 }
-
-# sliderInput("ThreadMapZoomID",
-#             "Zoom in and out by event similarity:",
-#             1,100,5, step = 1, ticks=FALSE)
-
-
-
-######################################################
-# Just putting this code here to play with for now.
-# this function finds the common events in two subsets of thread data
-common_events <- function(ss1, ss2, TN, CF, n){
-
-  # get the list of ngrams for each subset of threads
-  e1 = count_ngrams(ss1, TN, CF, n)[1]
-  e2 = count_ngrams(ss2, TN, CF, n)[1]
-
-  # return the intersection
-  return(intersect(as.matrix(e1), as.matrix(e2)))
-
-}
-
-rr_grams <- function(o,TN, CF, N, R) {
-  # N - max length of ngram
-  # R = threshold for repetition
-
-
-
-
-}
-
-# Ideas for regex work
-# https://stackoverflow.com/questions/35704369/identify-repetitive-pattern-in-numeric-vector-in-r-with-fuzzy-search
-
-# sapply(1:(length(x)/2), function(m) sum(rep(x[1:m], length = length(x)) != x))
-
-# x <- rep(c(1, 4, 2), 10)
-# for(k in seq_len(length(x)/2)) {
-#   pat <- x[1:k]
-#   if (identical(rep(pat, length = length(x)), x)) {
-#     print(pat)
-#     break
-#   }
-# }
-## [1] 1 4 2
