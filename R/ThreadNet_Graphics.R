@@ -32,6 +32,8 @@ CF_multi_pie <- function(oc,CF){
   if (length(CF)==0) {return(plotly_empty())}
 
   # first add the combined column if there is more than one
+  # TODO: review why combineContextFactors() is called here -- possible function to deprecate/modify
+  # ie why have context factors not already been combined when this is called?
   if (length(CF) >1){
     oc = combineContextFactors(oc, CF, "COMBINED")
     CF = c(CF, "COMBINED") }
