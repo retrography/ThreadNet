@@ -120,16 +120,17 @@ server <- shinyServer(function(input, output, session) {
     } else {
         rv$newmap <- rv$newmap+1 # trigger reactive value
         isolate(
+			# TODO:
+			# THIS FUNCTION NO LONGER AUTOMATICALLY ADDS EVENT MAP
+			# NEED TO RUN PROCESS FIRST FOR REACTIVE DISPLAY (IF ANY)
+			# AND THEN EXPLICITLY CALL FUNCTION TO ADD EVENT MAP
             OccToEvents_By_Chunk(
                 chunkInputEvents(),
                 input$Chunks_method_Button, # which method?
                 input$EventMapName2,
                 input$fixed_chunk_size,
                 input$chunk_time_gap_threshold,
-                'mins',
-                input$chunk_CFs,
-                get_EVENT_CF(),
-                get_COMPARISON_CF()
+                input$chunk_CFs
             )
         )
         output$EventValidate2 = renderText(paste('New map named', input$EventMapName2 ,'has been created'))
@@ -162,8 +163,6 @@ server <- shinyServer(function(input, output, session) {
             OccToEvents3(
                 regexInputEvents(),
                 input$EventMapName3,
-                get_EVENT_CF(),
-                get_COMPARISON_CF(),
                 'threadNum',
                 get_Zoom_REGEX(),
                 regexInput(),
@@ -222,8 +221,6 @@ server <- shinyServer(function(input, output, session) {
             OccToEvents3(
                 freqNgramInputEvents(),
                 input$EventMapName4,
-                get_EVENT_CF(),
-                get_COMPARISON_CF(),
                 'threadNum',
                 get_Zoom_freqNgram(),
                 selected_ngrams(),
@@ -234,17 +231,19 @@ server <- shinyServer(function(input, output, session) {
     }, ignoreInit = TRUE)
 
 	# separate the cluster calculation from the dendrogram display
+	# TODO: review clusterEvents call pending changes
     cluster_result <- eventReactive(input$EventButton6,{
         validate(need(!(check_map_name(input$EventMapName6)), paste0('Map Name ',input$EventMapName6,' already exists. Please select a different name.')))
         rv$newmap <- rv$newmap+1 # trigger reactive value
         isolate(
+			# TODO:
+			# THIS FUNCTION NO LONGER EXPLICITLY ADDS NEW EVENT MAP
+			# NEED TO ADD STEP TO NAME AND ADD THE MAP AFTER GENERATING IT
             clusterEvents(
                 get_event_mapping_threads(input$ClusterEventsInputID),
                 input$EventMapName6,
                 input$ClusterMethodID,
-                get_EVENT_CF(),
-                'cluster'
-            )
+            )[[2]] # [2] to get "clust"
         )
     }, ignoreInit = TRUE )
 
