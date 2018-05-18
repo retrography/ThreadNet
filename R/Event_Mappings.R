@@ -14,8 +14,6 @@
 # Absolutely no warranty!
 ##########################################################################################################
 
-# Checks the name attempting to be create against the list of
-# map names in memory and forces the creation of a new name.
 # TODO: deprecate this function when no longer needed
 check_map_name <- function(mapname){
 
@@ -40,21 +38,18 @@ store_event_mapping <- function(EventMapName, EventMap){
 	# Validate that the EventMapName is not already in the list
 	# Validate that the eventMap itself is not identical to anything already in the list (? -- confirm with Brian if this check is necessary)
 
-  	# Add the mapping to the global list of mappings. Sort by threadNum and seqNum
-	# TODO: does this need to be sorted?
-  	em <- list(name = paste(EventMapName), threads = EventMap[order(EventMap[['threadNum']],EventMap[['seqNum']]),])
+	# TODO: do validation here
+
+	# Validate the there is an actual EventMapName supplied (no blanks)
+	# Validate that the EventMapName is not already in the list
+	# Validate that the eventMap itself is not identical to anything already in the list (? -- confirm with Brian if this check is necessary)
+
+  # Add the mapping to the global list of mappings. Sort by threadNum and seqNum
+  em = list(name = paste(EventMapName), threads = e[order(e[['threadNum']],e[['seqNum']]),])
 
   	GlobalEventMappings <<- append(list(em), GlobalEventMappings )
 
 	# TODO: return ok/fail
-}
-
-get_event_index <- function(mapname) {
-
-	idx <- which(mapname==get_event_mapping_name_list() )
-
-	return(idx)
-
 }
 
 get_event_mapping_threads <- function(mapname){
