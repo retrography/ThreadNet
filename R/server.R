@@ -82,6 +82,8 @@ server <- shinyServer(function(input, output, session) {
 	#### Reactive Functions for Occurences ####
 	###########################################
 
+	# TODO: review to see if any of this can be moved to server/ReadData
+
 	# Return a dataframe of occurrences from the user specified inputFile
 	occ <- eventReactive(input$inputFile,parseInputData(input$inputFile))
 
