@@ -6,10 +6,6 @@
 # Absolutely no warranty!
 ##########################################################################################################
 
-# graphic functions used in Shiny App.
-# some plotly, but some from other packages
-library(plotly)
-
 ###### Pie charts for context factors  ####
 # It would be nice to display some other helpful information, perhaps (like the % of possible combinations that occur)
 
@@ -66,7 +62,7 @@ CF_multi_pie <- function(oc,CF){
     # take out rows with zero frequency
     cfData = cfData[(cfData[,"Freq"]>0),]
 
-    #N levels
+    # N levels
     CFlevels = length(cfData[,"Freq"])
 
     # keep track of max possible combinations
@@ -95,33 +91,6 @@ CF_multi_pie <- function(oc,CF){
     )
   return(pies)
 }
-
-####################################################
-# use the same general layout, but just for one event
-# need to pass in the levels for each CF to use as the column names
-# e is a data.frame with events (created by OccToEvents1 or OccToEvents2)
-# CF = list of context factor names used to define events
-# r is the row name for the event being examined
-#
-# KNOWN ISSUES:
-#  * Need to pass in the factor levels as labels for the pie slices
-#  * Need to compute the values differently for a node in the dendrogram or in a zoomed graph
-#  * Probably need to pass in the vector of values
-#
-#  Call this for one CF at a time
-# o is the raw occurrences.  This is where we get the labels.
-# e is the events.  This is where we get the frequencies
-# cf is the column name for one CF (e.g., "actor")
-# r is one row (or cluster ID)
-# zm is the zoom column number.
-make_df_for_one_pie <- function(o,e,cf,r,zm){
-
-  # get the labels from the occurrences (o), get the frequencies from events
-  cfdf = data.frame(Freq = aggregate_VCF_for_cluster(e,cf,r,zm), Label= levels(o[[cf]]) )
-
-  return(cfdf)
-}
-
 
 # e = events
 # o = occurrences
@@ -161,13 +130,13 @@ CF_multi_pie_event <- function(o, e,CF,r, zm){
   for (i in 1:nPlots) {
 
     # make table information for each plot
-    # cfData = data.frame(Freq=as.matrix(unlist(e[r,CF[i]])),Var1= letters[seq( from = 1, to = length(unlist(e[r,CF[i]])) )])
-    cfData = make_df_for_one_pie(o,e,CF[i],r,zm)
+  	# get the labels from the occurrences (o), get the frequencies from events
+  	cfData = data.frame(Freq = aggregate_VCF_for_cluster(e,cCF[i],r,zm), Label= levels(o[[CF[i]]]) )
 
     # take out rows with zero frequency
     cfData = cfData[(cfData[,"Freq"]>0),]
 
-    #N levels
+    # N levels
     CFlevels = length(cfData[,"Freq"])
 
     # Add the new plots
@@ -436,11 +405,10 @@ Comparison_Plots <- function(e, o, CF, CF_levels, nTimePeriods=1,  plot_type,rol
   nTimeBuckets = as.numeric(max(1,nTimePeriods))
   total_buckets = nLevels * nTimeBuckets
 
-  # Set up the N x M data stuctures to hold the parameters and the plots
-  plot_buckets = matrix(rep(list(), total_buckets),nrow = nTimeBuckets , ncol =nLevels)
+  	# Set up the N x M data stuctures to hold the parameters and the plots
+  	plot_buckets <- matrix(rep(list(), total_buckets),nrow = nTimeBuckets , ncol =nLevels)
 
-  # Get the subsets, first by time and then by category.  This will just return thread numbers.
-  time_buckets = make_subsets(et$threadNum,nTimeBuckets)
+	time_buckets <- split(et$threadNum, ceiling(seq_along(et$threadNum)/(length(et$threadNum)/nTimeBuckets)))
 
   plot_list = list()
 
