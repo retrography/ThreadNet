@@ -282,11 +282,6 @@ server <- shinyServer(function(input, output, session) {
                    output$SelectSubsetValidate = renderText(paste('New map named', input$SelectSubsetMapName ,'has been created'))
                  }, ignoreInit = TRUE)
 
-
-	# Get data for the Visualize tab.Need parallel functions for the other tabs.
-#	threadedEventsViz <- reactive({get_event_mapping_threads( input$VisualizeEventMapInputID ) })
-
-
 	# Get data for the Visualize tab.  Need parallel functions for the other tabs.
 	threadedEventsViz_ALL <- reactive({
 	  req(input$VisualizeEventMapInputID)
@@ -298,8 +293,6 @@ server <- shinyServer(function(input, output, session) {
 	  loc = input$VisualizeRangeID[1]
 	  width=input$VisualizeRangeID[2] - input$VisualizeRangeID[1]+1
 	  get_moving_window(threadedEventsViz_ALL(),width,loc) })
-
-
 
 	# Get data for the COMPARE tab mapping A
 	threadedEventsComp_A <- reactive({
