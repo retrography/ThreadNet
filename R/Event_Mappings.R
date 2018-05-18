@@ -14,6 +14,7 @@
 #'
 #' @param mapname name of map attempting to be created
 
+# TODO: deprecate this function when no longer needed
 check_map_name <- function(mapname){
 
     if (mapname %in% get_event_mapping_name_list()){
@@ -35,13 +36,18 @@ get_event_mapping_name_list <- function(){
 
 store_event_mapping <- function(EventMapName, e){
 
+	# TODO: do validation here
+
+	# Validate the there is an actual EventMapName supplied (no blanks)
+	# Validate that the EventMapName is not already in the list
+	# Validate that the eventMap itself is not identical to anything already in the list (? -- confirm with Brian if this check is necessary)
+
   # Add the mapping to the global list of mappings. Sort by threadNum and seqNum
   em = list(name = paste(EventMapName), threads = e[order(e[['threadNum']],e[['seqNum']]),])
 
   GlobalEventMappings <<- append(list(em), GlobalEventMappings )
 
-  return(em)
-
+	# TODO: return ok/fail
 }
 
 get_event_mapping_threads <- function(mapname){
