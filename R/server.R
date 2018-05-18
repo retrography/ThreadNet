@@ -317,9 +317,9 @@ server <- shinyServer(function(input, output, session) {
 	threadedEventsDiaComp <- reactive({
 	  req(input$DiaCompareMapInputID)
 	  get_event_mapping_threads(input$DiaCompareMapInputID )
-	  })
+	})
 
-	CF_levels <- reactive( get_CF_levels( threadedEventsDiaComp(),input$selectComparisonID) )
+  	CF_levels <- reactive( levels(threadedEventsDiaComp()[,input$selectComparisonID]) )
 
 	# Get data for the Moving Window tab.
 	threadedEventsMove <- reactive({
