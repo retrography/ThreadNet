@@ -105,7 +105,7 @@ output$otherVisNetwork <- renderVisNetwork({
 
 # use this to select how to color the nodes in force layout
 output$Force_Network_Tab_Controls <- renderUI({
-	button_choices <- intersect(colnames(threadedEventsViz()), cfnames(selectOccFilter()))
+	button_choices <- intersect(colnames(threadedEventsViz()), names(selectOcc())[-1]) # [-1] to skip first col "tStamp"
 	tags$div(
 		radioButtons(
 			"NetworkGroupID",
