@@ -81,19 +81,10 @@ threads_to_network <- function(et,TN,CF,timesplit){
 # Added in the "group" for the network graphics - default group is 'threadNum' because it will always be there
 threads_to_network_original <- function(et,TN,CF,grp='threadNum'){
 
-    # print(head(et))
-    #
-    # print(paste('CF=', CF))
-    # print(paste('grp=', grp))
-
   # First get the node names & remove the spaces
   node_label = levels(factor(et[[CF]]))  # unique(et[[CF]])
   node_label=str_replace_all(node_label," ","_")
   nNodes = length(node_label)
-
-    # print("node_label")
-    # print(node_label)
-    # print(paste('nNodes=', nNodes))
 
   node_group=character()
   for (n in 1:nNodes){
@@ -164,11 +155,6 @@ ThreadOccByPOV <- function(threadData){
 
 		# Increment stage
     	incProgress(1/n)
-
-		# HOW DO WE KNOW WHICH IS FOR EVENT AND WHICH IS FOR THREAD?
-		# better way -- label columns as "Thread" and "Event" --> have content be combined values of the columns to include
-		# see where this is used later -- might not even be necessary here
-		# also since these are both the same code, could test first for >1 and if they are the same, then add new function to do this
 
 		threadPOV <- paste0(THREAD_CF,collapse="_")
 		eventPOV  <- paste0(EVENT_CF,collapse="_")
@@ -284,7 +270,6 @@ ThreadOccByPOV <- function(threadData){
 		# TODO: get what this returns without actually storing any events yet
 		# Need to add button on "Review Data" tab to explicitly name and add this to the list
     	e <- clusterEvents(occ, 'OneToOne', 'Network Proximity', EVENT_CF,'threads')
-
 
 		# Increment stage
     	incProgress(5/n)
@@ -441,11 +426,8 @@ OccToEvents_By_Chunk <- function(o, m, EventMapName, uniform_chunk_size, tThresh
 
 }
 
-
 # this one creates events based on frequent ngrams or regular expressions
 OccToEvents3 <- function(o, EventMapName,EVENT_CF, compare_CF,TN, CF, rx, KeepIrregularEvents){
-
-  # print(rx)
 
   # Only run if eventMapName is filled in
   if (EventMapName =="") {return(data.frame()) }
@@ -454,9 +436,6 @@ OccToEvents3 <- function(o, EventMapName,EVENT_CF, compare_CF,TN, CF, rx, KeepIr
   for (i in 1:nrow(rx))
   {rx$patLength[i] = length(unlist(strsplit(rx$pattern[i], ',')))
   }
-
-  # print(rx)
-  # print(rx$label)
 
   # put this here for now
   timescale='mins'
@@ -471,11 +450,6 @@ OccToEvents3 <- function(o, EventMapName,EVENT_CF, compare_CF,TN, CF, rx, KeepIr
   tvrx =  replace_regex_list( tv, rx )
 
   tvrxs = lapply(1:length(tvrx), function(i) {unlist(strsplit(tvrx[[i]],','))})
-
-  # print('tvrx')
-  # print(tvrx[1:3])
-  # print('tvrxs')
-  # print(tvrxs[1:3])
 
   # count the total number of chunks
   nChunks = length(unlist(tvrxs))
@@ -511,9 +485,6 @@ OccToEvents3 <- function(o, EventMapName,EVENT_CF, compare_CF,TN, CF, rx, KeepIr
       # this is a chunk that matched one of the patterns
       if (tvrxs[[thread]][sn] %in% rx$label ){
 
-        # print(paste('thread sn = ',thread, sn))
-        # print(paste('matched regex label',tvrxs[[thread]][sn]))
-
         # Use the ZM_1 column to store the new labels
         e$ZM_1[chunkNo] = tvrxs[[thread]][sn]
         e$label[chunkNo] =  tvrxs[[thread]][sn]
@@ -536,8 +507,6 @@ OccToEvents3 <- function(o, EventMapName,EVENT_CF, compare_CF,TN, CF, rx, KeepIr
       }
       else if (KeepIrregularEvents=='Keep') {
         # copy data from input structure
-        # print(paste('no match',tvrxs[[thread]][sn]))
-
 
         # Use the ZM_1 column to store the new labels
         e$ZM_1[chunkNo] = tvrxs[[thread]][sn]
@@ -677,13 +646,6 @@ dist_matrix_network <- function(e,CF){
   return( as.dist(d) )
 }
 
-
-net_adj_matrix <- function(edges){
-
-  return(as_adj(graph_from_edgelist(as.matrix(edges))))
-
-}
-
 # new data structure for events (BTP 3/28)
 make_event_df <- function(event_CF,compare_CF,N){
 
@@ -752,7 +714,6 @@ aggregate_VCF_for_event <- function(o, occList, cf){
   return(aggCF)
 }
 
-
 # this version  assumes that the VCF is already computed.
 # Might come in handy, but it's not correct...
 aggregate_VCF_for_regex <- function(o, occList, cf){
@@ -773,8 +734,6 @@ aggregate_VCF_for_regex <- function(o, occList, cf){
     }}
   return(aggCF)
 }
-
-
 
 # Same basic idea, but works on a set of events within a cluster, rather than a set of occurrences within an event
 # so you get get a subset of rows, convert to a matrix and add them up
@@ -799,7 +758,6 @@ aggregate_VCF_for_cluster <- function(e, cf, eclust, zoom_col){
   else
     return( colSums( matrix( unlist(s), nrow = length(s), byrow = TRUE) ))
 }
-
 
 # this one takes the whole list
 VCF_matrix <- function(e, vcf ){
