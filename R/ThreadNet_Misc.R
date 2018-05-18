@@ -79,27 +79,6 @@ combineContextFactors <- function(threadData,CF,newCol){
   	return(threadData)
 }
 
-
-
-
-# just keep this simple
-newColName <- function(CF_list){
-  return(paste0(CF_list,collapse="_")) }
-
-
-# These were used on the occ-to-event tab to configure the slider
-threshold_slider_min <- function(o){
-  return(floor(min(o$timeGap)))
-}
-
-threshold_slider_max <- function(o){
-  return(ceiling(max(o$timeGap)))
-}
-
-threshold_slider_selected <- function(o){
-  return(min(o$timeGap))
-}
-
 ####################################
 ### FUNCTIONS TO CALCULATE DIFFS ###
 ####################################
@@ -129,6 +108,7 @@ row_diff_handoff <- function(this_row){
 }
 
 
+# TODO: the next two functions are only called in setPOV function -- move with those
 diff_tStamp <- function(ts){
 
   # initialize the first row
@@ -369,6 +349,7 @@ dual_window_correlation  <- function(e,w,s=1,n=2){
 
 # find the biggest column with ZM_, and then get the number that goes with that.
 # It will not be the same as the column number.
+# TODO: re-write this to be more efficient and deprecate function
 zoom_upper_limit <- function(e){
   upper_limit = as.integer(str_replace(colnames(e[max(grep("ZM_",colnames(e)))]),"ZM_",""))
   return(upper_limit)

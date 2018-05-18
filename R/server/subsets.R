@@ -1,5 +1,17 @@
 # Server Output Functions for Subsets and Mapping Tab
 
+threshold_slider_min <- function(o){
+  return(floor(min(o$timeGap)))
+}
+
+threshold_slider_max <- function(o){
+  return(ceiling(max(o$timeGap)))
+}
+
+threshold_slider_selected <- function(o){
+  return(min(o$timeGap))
+}
+
 #### Contextual Chunks sub-tab ####
 
 output$chunk_controls_0 <- renderUI({
