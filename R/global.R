@@ -42,7 +42,6 @@ source("ThreadNet_Misc.R")
 source("ThreadNet_Graphics.R")
 source("ThreadNet_Metrics.R")
 source("Event_Mappings.R")
-source("ReadData.R")
 source("NGrams.R")
 
 # store event mappings
