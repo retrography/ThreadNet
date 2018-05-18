@@ -1,7 +1,15 @@
-# Server: Read Data tab functions
+# Server: Read Data functions
+
+##############################
+# Local Variable Definitions #
+##############################
 
 # limit what files to accept on input
 fileTypes <- c("text/csv","text/comma-separated-values,text/plain",".csv")
+
+##########################
+# Tab Output Definitions #
+##########################
 
 # file selector dialog
 output$fileSelector <- renderUI({
