@@ -73,5 +73,5 @@ cleanOcc <- function(fileRows){
   	complete$weekday <- as.factor(weekdays(as.Date(complete$tStamp)))
   	complete$month   <- as.factor(months(as.Date(complete$tStamp)))
 
-  	return(fileRows)
+  	return(complete)
 }
