@@ -77,46 +77,40 @@ cfnames <- function(o){
 #'
 #' @return list of unique factor levels
 #' @export
+# TODO: deprecate this function
 get_CF_levels <- function(o,cf){
 
   return(levels(o[,cf]))
 }
 
-##########################################################################################################
-# this function adds a new column to the occurrences table based on a combination of context factors CF)
-#' Creates a new column that combines some set of other columns
-#'
-#' For example, actor+action
-#'
-#' @family ThreadNet_Misc
-#' @param o data frame with threads
-#' @param CF contextual factors to be combined.
-#' @param newCol  name of the new combined conextual factor
-#'
-#' @return data frame with the new column
-#' @export
-#'
-#' @examples
-combineContextFactors <- function(o,CF,newCol){
+# add a new column to the occurrences table based on a combination of context factors CF
+# TODO: deprecate this function; review all functions that call this
+combineContextFactors <- function(threadData,CF,newCol){
 
+	# CF     = contextual factors to be combined
+	# newCol = name of new combined contextual factor
 
-  # Use the old column if there is one
-  if (!(newCol %in% names(o))) {
+  	# Use the old column if there is one
+  	if (!(newCol %in% names(threadData))) {
 
-    # Need to get the CF parameters into the right format for tidyr::unite function
-    cfn= sapply(CF, as.character)
-    newCol = as.character(newCol)
+    	# Need to get the CF parameters into the right format for tidyr::unite function
+    	cfn    <- sapply(CF, as.character)
+    	newCol <- as.character(newCol)
 
-    #  unite the columns, but keep the old ones
-    o= unite_(o, newCol, cfn, sep="+", remove=FALSE)
+    	#  unite the columns, but keep the old ones
+    	threadData <- unite_(threadData, newCol, cfn, sep="+", remove=FALSE)
 
-  }
+  	}
 
-  # Coerce the new column into a factor
-  o[newCol] = as.factor(o[,newCol])
+  	# Coerce the new column into a factor
+  	# Should already be a factor -- this function should only be called if the new col is not in names(threadData)
+  	threadData[newCol] <- as.factor(threadData[,newCol])
 
-  return(o)
+  	return(threadData)
 }
+
+
+
 
 # just keep this simple
 newColName <- function(CF_list){
