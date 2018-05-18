@@ -49,7 +49,6 @@ CF_multi_pie <- function(oc,CF){
   plotDomainLB = ctrPlot - offset
   plotDomainUB = ctrPlot + offset
 
-
   # Now loop for each CF, computing entropy and adding on the next "trace" to the plot
   # start with blank plot object
   pies = plot_ly()
@@ -86,8 +85,6 @@ CF_multi_pie <- function(oc,CF){
     layout(showlegend=FALSE,
            xaxis = list(showgrid = FALSE,zeroline = FALSE, showticklabels = FALSE),
            yaxis = list(showgrid = FALSE, zeroline = FALSE,showticklabels = FALSE)
-           # ,
-           # autosize = F, width = "100%", height = "100px")
     )
   return(pies)
 }
@@ -569,71 +566,66 @@ role_map <- function(e, o, cfs){
 
 }
 
-
 # this shows relative time versus sequential time
 # Inspired by Gergen and Daniger-Schroeder
 threadTrajectory <- function(or){
 
-  # setting color palettes
-  # first find the number of distinct colors
-  nColors = length(unique(or$threadNum))
-  pal <- rainbow_hcl(nColors)
+	# setting color palettes
+	# first find the number of distinct colors
+	nColors <- length(unique(or$threadNum))
+	pal     <- rainbow_hcl(nColors)
 
-  return( plot_ly(or, x = ~or$relativeTime, y = ~or$seqNum, color= as.character(or$threadNum),
-                  colors=pal,
-                  name = 'threads', type = 'scatter', mode='lines',
-                  text = ~paste(or$threadNum,or$label,sep=':'),
-                  hoverinfo = "text",
-                  showlegend=FALSE)
-          %>%
-            layout(
-              xaxis = list(title='Relative time'),
-              yaxis = list(title='Sequence')
-            ))
+	outputPlot <- plot_ly(
+		or, x = ~or$relativeTime, y = ~or$seqNum,
+		color  = as.character(or$threadNum), colors = pal,
+    	name = 'threads', type = 'scatter', mode='lines',
+        text = ~paste(or$threadNum,or$label,sep=':'),
+        hoverinfo = "text", showlegend = FALSE
+	) %>% layout(
+     	xaxis = list(title='Relative time'),
+        yaxis = list(title='Sequence')
+    )
+
+	return(outputPlot)
 }
 
+movingWindowCorrelation <- function(trace) {
 
-movingWindowCorrelation <- function( trace ){
-  return( plot_ly(trace, x = ~window, y = ~correlation,
-                  name = 'Window', type = 'scatter', mode='lines+markers',
-                  text = paste('Thread:',trace$thread),
-                  marker=list(size=8, opacity=1),
-                  hoverinfo = "text",
-                  symbol= "line-ew", symbols=15, showlegend=FALSE
-  )
-  %>%
-    layout(
-      xaxis = list(title='Window number'),
-      yaxis = list(title='Correlation',
-                   range = c(0, 1),
-                   autotick = FALSE,
-                   ticks = "outside",
-                   tick0 = 0,
-                   dtick = 0.1,
-                   ticklen = 5,
-                   tickwidth = 2,
-                   showticklabels = TRUE))
-  )
+ 	outputPlot <- plot_ly(
+		trace, x = ~window, y = ~correlation,
+        name = 'Window', type = 'scatter', mode='lines+markers',
+        text = paste('Thread:',trace$thread),
+        marker = list(size=8, opacity=1),
+        hoverinfo = "text",
+        symbol= "line-ew", symbols=15, showlegend=FALSE
+	) %>% layout(
+    	xaxis = list(title='Window number'),
+    	yaxis = list(
+			title='Correlation', range = c(0, 1),
+            autotick = FALSE, ticks = "outside",
+            tick0 = 0, dtick = 0.1, ticklen = 5,
+            tickwidth = 2, showticklabels = TRUE
+		)
+	)
+  
+	return(outputPlot)
 }
-dualmovingWindowCorrelation <- function( trace ){
-  return( plot_ly(trace, x = ~thread, y = ~correlation,
-                  name = 'Window', type = 'scatter', mode='lines+markers',
-      #          text = ~thread,
-                  marker=list(size=8, opacity=1),
-       #           hoverinfo = "text",
-                  symbol= "line-ew", symbols=15, showlegend=FALSE  #,height = 200
-  )
-  %>%
-    layout(
-      xaxis = list(title='Window number'),
-      yaxis = list(title='Correlation',
-                   range = c(0, 1),
-                   autotick = FALSE,
-                   ticks = "outside",
-                   tick0 = 0,
-                   dtick = 0.1,
-                   ticklen = 5,
-                   tickwidth = 2,
-                   showticklabels = TRUE))
-  )
+
+dualmovingWindowCorrelation <- function(trace) {
+
+	outputPlot <- plot_ly(
+		trace, x = ~thread, y = ~correlation,
+        name = 'Window', type = 'scatter', mode='lines+markers',
+        marker=list(size=8, opacity=1), symbol= "line-ew",
+		symbols=15, showlegend=FALSE
+  	) %>% layout(
+    	xaxis = list(title='Window number'),
+    	yaxis = list(
+			title='Correlation',range = c(0, 1),autotick = FALSE,
+            ticks = "outside",tick0 = 0,dtick = 0.1,
+            ticklen = 5,tickwidth = 2,showticklabels = TRUE
+		)
+	)
+
+  	return(outputPlot)
 }
