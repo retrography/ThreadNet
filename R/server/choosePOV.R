@@ -12,7 +12,6 @@ output$povThreadSelector <- renderUI({
     )
 })
 
-# TODO: review this
 output$ContextFlowers_Threads <- renderPlotly({
 	CF_multi_pie(
 		selectOccFilter(),
@@ -32,7 +31,6 @@ output$povEventSelector <- renderUI({
     )
 })
 
-# TODO: review this
 output$ContextFlowers_Events <- renderPlotly({
 	CF_multi_pie(
 		selectOccFilter(),

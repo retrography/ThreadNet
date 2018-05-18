@@ -88,7 +88,7 @@ server <- shinyServer(function(input, output, session) {
 	# selected columns from the raw data
 	selectOcc <- reactive(occ()[c("tStamp", input$CFcolumnsID)] )
 
-	# select rows using the nice DT input
+	# select all rows using the nice DT input
 	selectOccFilter <- reactive(selectOcc()[input$dataFilter_rows_all,])
 
 	# Keeping this function here for now because it is still called in visualize

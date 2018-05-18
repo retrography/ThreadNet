@@ -17,7 +17,8 @@ threads_to_network <- function(et,TN,CF,timesplit){
 	# CF name of the column in dataframe that contains the events that will form the nodes of the network
 	# timesplit time measure
 
-  et$time <- et[[timesplit]]
+  et$time = et[[timesplit]]
+  #et$time = et$POVseqNum
 
   # First get the node names & remove the spaces
   node_label <- unique(et[[CF]])
@@ -145,6 +146,11 @@ ThreadOccByPOV <- function(threadData){
 		# Increment stage
     	incProgress(1/n)
 
+		# HOW DO WE KNOW WHICH IS FOR EVENT AND WHICH IS FOR THREAD?
+		# better way -- label columns as "Thread" and "Event" --> have content be combined values of the columns to include
+		# see where this is used later -- might not even be necessary here
+		# also since these are both the same code, could test first for >1 and if they are the same, then add new function to do this
+
 		threadPOV <- paste0(THREAD_CF,collapse="_")
 		eventPOV  <- paste0(EVENT_CF,collapse="_")
 
@@ -156,134 +162,117 @@ ThreadOccByPOV <- function(threadData){
 			threadData[[threadPOV]] <- combined
 		}
 
+		# Only run if EVENT_CF > 1 and != THREAD_CF
+		if(length(EVENT_CF)>1 & EVENT_CF != THREAD_CF){
+			CF_Cols  <- threadData[,EVENT_CF]
+			df_args  <- c(CF_Cols, sep="+")
+			combined <- do.call(paste,df_args)
+			threadData[[eventPOV]] <- combined
+		}
 
-# Make new threads from a user defined POV
-# Take the raw occurrences from the input file and sort them by time stamp within
-# a set of contextual factors that remain constant for each thread
-# and return dataframe containing the same occurrences sorted from a different point of view
-ThreadOccByPOV <- function(inputData){
+		# temp holder -- can move all "occ" below to threadData; or just call this "occ" from the beginning
+		occ <- threadData
 
-	# inputData is the cleaned occurences list
-	# THREAD_CF is a list of 1 or more context factors that define the threads (and stay constant during each thread)
-	# EVENT_CF is a list of 1 or more context factors that define events (and change during threads)
-
-	THREAD_CF <- get_THREAD_CF()
-	EVENT_CF  <- get_EVENT_CF()
-
-  	withProgress(message = "Creating Events", value = 0,{
-	
-		# we define 5 stages for progress updates
-    	n <- 5
-
-		# Increment stage
-    	incProgress(1/n)
-
-		# THE FOLLOWING TWO STEPS DO THE SAME THING ON THREAD & EVENT -- does it make sense to combine them?
-
-    	# get a new column name based on the thread_CF -- use this to define threads
-		# TODO: review these steps
-    	nPOV <- paste0(THREAD_CF,collapse="_") # in place of newColName(THREAD_CF)
-    	occ  <- combineContextFactors(inputData,THREAD_CF,nPOV)
-
-    	# The event context factors define the new category of events within those threads
-		eventPOV <- paste0(EVENT_CF,collapse="_") # in place of newColName(EVENT_CF)
-    	occ <- combineContextFactors(occ,EVENT_CF,eventPOV)
-    	occ <- occ[order(occ[nPOV],occ$tStamp),]
+		# sort -- review if this is necessary
+    	occ <- occ[order(occ[threadPOV],occ$tStamp),]
 
 		###########
 
-		rowCount <- integer(nrow(occ))
-
     	# add two columns to the data frame
+		# TODO: review why add columns containing the row count?
+		rowCount      <- integer(nrow(occ))
     	occ$threadNum <- rowCount
     	occ$seqNum    <- rowCount
 
     	# add new column called label - just copy the new combined event_CF column
+		# TODO: review this
     	occ$label <- occ[[eventPOV]]
 
     	# occurrences have zero duration
     	occ$eventDuration <- 0
 
-    	# Also add columns for the time gaps that appear from this POV
+    	# add columns for the time gaps that appear from this POV
+		# TODO: This function is slow -- review
     	occ$timeGap <- diff_tStamp(occ$tStamp)
+
 
     	# create new column for relative time stamp.
 		# Initialize to absolute tStamp and adjust below
     	occ$relativeTime <- lubridate::ymd_hms(occ$tStamp)
 
     	# then get the unique values in that POV
-    	occ[nPOV] <- as.factor(occ[,nPOV])
-    	pov_list  <- levels(occ[[nPOV]])
+    	occ[threadPOV] <- as.factor(occ[,threadPOV])
+    	pov_list       <- levels(occ[[threadPOV]])
 
 		# Increment stage
         incProgress(2/n)
 
     	# now loop through the pov_list and assign values to the new columns
     	start_row <- 1
-    	thrd <- 1
+    	thrd      <- 1
 
     	for(p in pov_list) {
 
       		# get the length of the thread
-      		tlen <- sum(occ[[nPOV]]==p)
+      		tlen <- sum(occ[[threadPOV]]==p)
 
       		# guard against error
       		if(tlen>0) {
 
-        	# compute the index of the end row
-        	end_row <- start_row + tlen - 1
-        	# print(paste('start_row =', start_row ))
-        	# print(paste('end_row =',end_row  ))
+        		# compute the index of the end row
+        		end_row <- start_row + tlen - 1
 
-        	# they all get the same thread number and incrementing seqNum
-        	occ[start_row:end_row, "threadNum"] <- as.matrix(rep(as.integer(thrd),tlen))
-        	occ[start_row:end_row, "seqNum"]    <- as.matrix(c(1:tlen))
+        		# they all get the same thread number and incrementing seqNum
+        		occ[start_row:end_row, "threadNum"] <- as.matrix(rep(as.integer(thrd),tlen))
+        		occ[start_row:end_row, "seqNum"]    <- as.matrix(c(1:tlen))
 
-        	# find the earliest time value for this thread
-        	start_time <- min(lubridate::ymd_hms(occ$tStamp[start_row:end_row]))
-        	# print(start_time)
+        		# find the earliest time value for this thread
+        		start_time <- min(lubridate::ymd_hms(occ$tStamp[start_row:end_row]))
 
-        	# increment the counters for the next thread
-        	start_row <- end_row + 1
-        	thrd      <- thrd + 1
-      } # tlen>0
-    }
+        		# increment the counters for the next thread
+        		start_row <- end_row + 1
+        		thrd      <- thrd + 1
+    		} # tlen>0
+		}
 
-	# Increment stage
-    incProgress(3/n)
+		# Increment stage
+    	incProgress(3/n)
 
-    # split occ data frame by threadNum to find earliest time value for that thread
-    # then substract that from initiated relativeTime from above
-    occ_split <- lapply(split(occ, occ$threadNum), function(x) {x$relativeTime = x$relativeTime - min(lubridate::ymd_hms(x$tStamp)); x})
-    # row bind data frame back together
-    occ <- data.frame(do.call(rbind, occ_split))
+    	# split occ data frame by threadNum to find earliest time value for that thread
+    	# then substract that from initiated relativeTime from above
+    	occ_split <- lapply(split(occ, occ$threadNum), function(x) {x$relativeTime = x$relativeTime - min(lubridate::ymd_hms(x$tStamp)); x})
 
-    #  these are just equal to the row numbers -- one occurrence per event
-    occ["occurrences"] <- 1:nrow(occ)
+    	# row bind data frame back together
+    	occ <- data.frame(do.call(rbind, occ_split))
 
-    # now go through and change each of the CF values to a vector (0,0,0,1,0,0,0,0)
-    for (cf in EVENT_CF){
-      # make a new column for each CF
-      VCF <- paste0("V_",cf)
-      occ[[VCF]] <- vector(mode = "integer",length=nrow(occ))
+    	#  these are just equal to the row numbers -- one occurrence per event
+    	occ["occurrences"] <- 1:nrow(occ)
 
-      for (r in 1:nrow(occ)){ occ[[r,VCF]] = list(convert_CF_to_vector(occ,cf,r)) }
-    }
+    	# now go through and change each of the CF values to a vector (0,0,0,1,0,0,0,0)
+    	for (cf in EVENT_CF){
 
-	# Increment stage
-    incProgress(4/n)
+    		# make a new column for each CF
+    	  	VCF <- paste0("V_",cf)
+    	  	occ[[VCF]] <- vector(mode = "integer",length=nrow(occ))
 
-    # this will store the event map in the GlobalEventMappings and return events with network cluster added for zooming...
-	# TODO: get what this returns without actually storing any events yet
-    e <- clusterEvents(occ, 'OneToOne', 'Network Proximity', EVENT_CF,'threads')
+    	  	for (r in 1:nrow(occ)){ occ[[r,VCF]] = list(convert_CF_to_vector(occ,cf,r)) }
+    	}
 
-		results <- e[[1]] # [1] to get the eventMap
+		# Increment stage
+    	incProgress(4/n)
 
-	# Increment stage
-    incProgress(5/n)
+    	# this will store the event map in the GlobalEventMappings and return events with network cluster added for zooming...
+		# TODO: get what this returns without actually storing any events yet
+		# Need to add button on "Review Data" tab to explicitly name and add this to the list
+    	e <- clusterEvents(occ, 'OneToOne', 'Network Proximity', EVENT_CF,'threads')
 
 
-  return( e )
+		# Increment stage
+    	incProgress(5/n)
+
+  	}) # end progress bar
+
+  	return(e)
 
 }
 
@@ -427,8 +416,6 @@ OccToEvents_By_Chunk <- function(o, m, EventMapName, uniform_chunk_size, tThresh
 	# TODO: need to add step to explicitly add event map in caller function
   e <- clusterEvents(e, EventMapName, 'Contextual Similarity')[[1]] # [1] to get the event map
 
-	# NOTE: "e" is just the threads that were created; need to explicitly give it a name and add it to the map list
-
   return(e)
 
 }
@@ -545,37 +532,30 @@ OccToEvents3 <- function(o, EventMapName,TN, CF, rx, KeepIrregularEvents){
 # new function for new tab
 # e is the event list
 # cluster_method is either "Sequential similarity" or "Contextual Similarity" or "Network Structure"
-# TODO: handle cluster_method separately, then call "createEventMap"?
-
-# Rename to "createEventMap"?
-# TODO: don't pass in "EventMapName" here, and then add to list
-# just return the map, and have the called give it a name and explicitly add it
-clusterEvents <- function(e, cluster_method){
-
-	event_CF <- get_EVENT_CF()
+clusterEvents <- function(e, NewMapName, cluster_method, event_CF,what_to_return='cluster'){
 
 	# make sure to cluster on the correct column (one that exists...)
   	if (cluster_method=="Sequential similarity") {
 		dd <- dist_matrix_seq(e)
 	} else if (cluster_method=="Contextual Similarity") {
-		dd <- dist_matrix_context(e,event_CF)
-	} else if (cluster_method=="Network Proximity") {
+		dd <- dist_matrix_context(e,event_CF) }
+  	else if (cluster_method=="Network Proximity") {
+
     	# The focal column is used to trade the network.  It will probably only be present in the OneToOne mapping, but we should check more generally
     	# if it's not present, then use the highest granularity of zooming available.
-    	focalCol <- paste0(event_CF,collapse="_")
+    	focalCol <- newColName(event_CF)
 
-    	if(!focalCol %in% colnames(e)) {
-			zoom     <- as.integer(str_replace(colnames(e[max(grep("ZM_",colnames(e)))]),"ZM_",""))
-			focalCol <- paste0('ZM_',zoom)
+    	if (! focalCol %in% colnames(e)) {
+			focalCol <- paste0('ZM_',zoom_upper_limit(e))
 		}
 
     	dd <- dist_matrix_network(e,focalCol)
 	}
 
   	### cluster the elements
-  	clust <- hclust(dd, method="ward.D2")
+  	clust <- hclust( dd,  method="ward.D2" )
 
-	# delete old ZM columns
+  	######## need to delete the old ZM_ columns and append the new ones.  ###########
   	e[grep("ZM_",colnames(e))] <- NULL
 
   	# number of chunks is the number of rows in the distance matrix
@@ -594,23 +574,70 @@ clusterEvents <- function(e, cluster_method){
   	# need to handle differently for network clusters
  	# we are relying on "unique" returning values in the same order whenever it is called on the same data
   	if (cluster_method=="Network Proximity") {
-		merge_col_name       <- paste0(event_CF,collapse="_")
+		merge_col_name       <- newColName(event_CF)
     	zm[[merge_col_name]] <- unique(e[[merge_col_name]])
     	newmap               <-  merge(e, zm, by=merge_col_name)
 	} else {
 		newmap <- cbind(e, zm)
 	}
 
-	# generate event map
-	# TODO: this should be returned
-	eventMap <- newmap[order(newmap[['threadNum']],newmap[['seqNum']]),]
+  	# only  store the event map in the GlobalEventMappings if something is filled in
+  	if (!NewMapName=="")  {
+   		eventMap <- store_event_mapping(NewMapName,newmap)
+	}
 
-	# For now two different types of functions call this, so return both parts:
-	# TODO: split this function so the callers that need eventMap can get it
-	# and the caller that needs clust can also get it
-	results <- list(eventMap,clust)
+	# return the cluster solution for display
+  	if (what_to_return=='cluster') {
+		return(clust)
+	} else {
+		return(eventMap[['threads']])
+	}
+}
 
-	return(results)
+# this function pulls computes their similarity of chunks based on sequence
+dist_matrix_seq <- function(e){
+
+  nChunks = nrow(e)
+  evector=vector(mode="list", length = nChunks)
+  for (i in 1:nChunks){
+    evector[i]=unique(as.integer(unlist(e$occurrences[[i]])))
+  }
+  return( stringdistmatrix( evector, method="osa") )
+}
+
+# this function pulls computes their similarity of chunks based on context
+# e = events, with V_columns
+# CF = event CFs
+# w = weights (0-1)
+#
+dist_matrix_context <- function( e, CF ){
+
+  nChunks = nrow(e)
+  evector= VCF_matrix( e, paste0( "V_",CF ))
+
+  return( dist( evector, method="euclidean") )
+}
+
+# this function computes their similarity of chunks based on network
+dist_matrix_network <- function(e,CF){
+
+  # first get the nodes and edges
+  n=threads_to_network_original(e,'threadNum',CF)
+
+  # print(paste('in dist_matrix_network, n=', n))
+
+  # now get the shortest paths between all nodes in the graph
+  d=distances(graph_from_data_frame(n$edgeDF),
+              v=n$nodeDF[['label']],
+              to=n$nodeDF[['label']])
+
+  return( as.dist(d) )
+}
+
+
+net_adj_matrix <- function(edges){
+
+  return(as_adj(graph_from_edgelist(as.matrix(edges))))
 
 }
 
