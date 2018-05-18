@@ -17,16 +17,11 @@ threads_to_network <- function(et,TN,CF,timesplit){
 	# CF name of the column in dataframe that contains the events that will form the nodes of the network
 	# timesplit time measure
 
-  et$time = et[[timesplit]]
-  #et$time = et$POVseqNum
+  et$time <- et[[timesplit]]
 
-  #et$time<-as.numeric(et$tStamp)
   # First get the node names & remove the spaces
-  node_label = unique(et[[CF]])
-  node_label=str_replace_all(node_label," ","_")
-
-  # print("node_label")
-  # print(node_label)
+  node_label <- unique(et[[CF]])
+  node_label <- str_replace_all(node_label," ","_")
 
   # set up the data frames we need to draw the network
   nodes = data.frame(
@@ -87,9 +82,7 @@ threads_to_network_original <- function(et,TN,CF,grp='threadNum'){
   nNodes = length(node_label)
 
   node_group=character()
-  for (n in 1:nNodes){
-    node_group = c(node_group, as.character(unlist( et[which(et[[CF]]==node_label[n]),grp][1]) ) )
-  }
+  for (n in 1:nNodes){node_group = c(node_group, as.character(unlist( et[which(et[[CF]]==node_label[n]),grp][1]) ) )}
 
   # set up the data frames we need to draw the network
   nodes = data.frame(
@@ -124,13 +117,9 @@ threads_to_network_original <- function(et,TN,CF,grp='threadNum'){
     to[i] = match(to_labels[i], nodes$label)
   }
 
-  edges = data.frame(
-    from,
-    to,
+  edges = data.frame(from,to,
     label = ngdf$freq,
     Value =ngdf$freq) %>% filter(!from==to)
-
-  # print(paste("Edges:",edges))
 
   return(list(nodeDF = nodes, edgeDF = edges))
 }
@@ -197,9 +186,7 @@ ThreadOccByPOV <- function(threadData){
     	occ$eventDuration <- 0
 
     	# add columns for the time gaps that appear from this POV
-		# TODO: This function is slow -- review
     	occ$timeGap <- diff_tStamp(occ$tStamp)
-
 
     	# create new column for relative time stamp.
 		# Initialize to absolute tStamp and adjust below
@@ -245,7 +232,7 @@ ThreadOccByPOV <- function(threadData){
 
     	# split occ data frame by threadNum to find earliest time value for that thread
     	# then substract that from initiated relativeTime from above
-    	occ_split <- lapply(split(occ, occ$threadNum), function(x) {x$relativeTime = x$relativeTime - min(lubridate::ymd_hms(x$tStamp)); x})
+    	occ_split <- lapply(split(occ, occ$threadNum), function(x) {x$relativeTime <- x$relativeTime - min(lubridate::ymd_hms(x$tStamp)); x})
 
     	# row bind data frame back together
     	occ <- data.frame(do.call(rbind, occ_split))
@@ -260,23 +247,29 @@ ThreadOccByPOV <- function(threadData){
     	  	VCF <- paste0("V_",cf)
     	  	occ[[VCF]] <- vector(mode = "integer",length=nrow(occ))
 
-    	  	for (r in 1:nrow(occ)){ occ[[r,VCF]] = list(convert_CF_to_vector(occ,cf,r)) }
+    	  	for (r in 1:nrow(occ)){
+				occ[[r,VCF]] <- list(convert_CF_to_vector(occ,cf,r))
+			}
     	}
 
 		# Increment stage
     	incProgress(4/n)
 
-    	# this will store the event map in the GlobalEventMappings and return events with network cluster added for zooming...
-		# TODO: get what this returns without actually storing any events yet
-		# Need to add button on "Review Data" tab to explicitly name and add this to the list
-    	e <- clusterEvents(occ, 'OneToOne', 'Network Proximity', EVENT_CF,'threads')
+		# return events with network cluster added for zooming...
+		# NOTE: no eventmap stored here any more
+		# TODO: Need to add button on "Review Data" tab to explicitly name and add this to the list
+    	e <- clusterEvents(occ, 'Network Proximity')
+
+		results <- e[[1]] # [1] to get the eventMap
+
+		# NOTE: "e" is just the threads that were created; need to explicitly give it a name and add it to the map list
 
 		# Increment stage
     	incProgress(5/n)
 
   	}) # end progress bar
 
-  	return(e)
+  	return(results)
 
 }
 
@@ -305,22 +298,22 @@ ThreadOccByPOV <- function(threadData){
 
 # new version containing more ways to create chunks -- uses concepts from original prototype, but better implementation
 # chunk by handoff, time gap and handoff gap
-OccToEvents_By_Chunk <- function(o, m, EventMapName, uniform_chunk_size, tThreshold, timescale='mins', chunk_CF, event_CF, compare_CF){
+OccToEvents_By_Chunk <- function(o, m, EventMapName, uniform_chunk_size, tThreshold, chunk_CF){
 
-  # Inputs: o = table of occurrences
-  #         m = method parameter =  c( "Handoffs", "Time Gap","Fixed Size")
-  #         uniform_chunk_size = used to identify breakpoints -- from input slider
-  #         tThreshold = used to identify breakpoints -- from input slider
-  #         EventMapName = used to store this mapping in an environment
-  #         CF_compare = context factors used for comparison -- need to be copied over here when the thread is created.
+	event_CF <- get_EVENT_CF(),
+    compare_CF <- get_COMPARISON_CF()
+
+	timescale <- 'mins'
+
+  # o = table of occurrences
+  # m = method parameter =  c( "Handoffs", "Time Gap","Fixed Size")
+  # uniform_chunk_size = used to identify breakpoints -- from input slider
+  # tThreshold = used to identify breakpoints -- from input slider
+  # EventMapName = used to store this mapping in an environment
 
 
   # Only run if eventMapName is filled in
   if (EventMapName =="") {return(data.frame()) }
-
-
-  # put this here for now
-  timescale='mins'
 
 
   #### First get the break points between the events
@@ -345,8 +338,6 @@ OccToEvents_By_Chunk <- function(o, m, EventMapName, uniform_chunk_size, tThresh
 
   ### Use the break points to find the chunks -- just store the index back to the raw data
   nChunks = length(breakpoints)
-
-  # print(paste("nChunks=",nChunks))
 
   # make the dataframe for the results.  This is the main data structure for the visualizations and comparisons.
   e = make_event_df(event_CF, compare_CF, nChunks)
@@ -416,21 +407,23 @@ OccToEvents_By_Chunk <- function(o, m, EventMapName, uniform_chunk_size, tThresh
 
   # fill in the last column with the label (tried using row number...)
   e$ZM_1 = as.factor(e$label)
-#  e$ZM_1 = 1:nrow(e)
 
-  # print(head(e))
-  # this will store the event map in the GlobalEventMappings and return events with network cluster added for zooming...
-  e=clusterEvents(e, EventMapName, 'Contextual Similarity', event_CF,'threads')
+	# return events with network cluster added for zooming...
+    # NOTE: no eventmap stored here any more
+	# TODO: need to add step to explicitly add event map in caller function
+  e <- clusterEvents(e, EventMapName, 'Contextual Similarity')[[1]] # [1] to get the event map
+
+	# NOTE: "e" is just the threads that were created; need to explicitly give it a name and add it to the map list
 
   return(e)
 
 }
 
 # this one creates events based on frequent ngrams or regular expressions
-OccToEvents3 <- function(o, EventMapName,EVENT_CF, compare_CF,TN, CF, rx, KeepIrregularEvents){
+OccToEvents3 <- function(o, EventMapName,TN, CF, rx, KeepIrregularEvents){
 
-  # Only run if eventMapName is filled in
-  if (EventMapName =="") {return(data.frame()) }
+	EVENT_CF <- get_EVENT_CF(),
+    compare_CF <- get_COMPARISON_CF(),
 
   # keep track of the length of each pattern
   for (i in 1:nrow(rx))
@@ -439,9 +432,6 @@ OccToEvents3 <- function(o, EventMapName,EVENT_CF, compare_CF,TN, CF, rx, KeepIr
 
   # put this here for now
   timescale='mins'
-
-  # Only run if eventMapName is filled in; return empty data frame otherwise
-  if (EventMapName ==""){return(data.frame())}
 
   # get the text vector for this set of threaded occurrences, delimited by commas
   tv = thread_text_vector( o, TN, CF, ',' )
@@ -470,8 +460,6 @@ OccToEvents3 <- function(o, EventMapName,EVENT_CF, compare_CF,TN, CF, rx, KeepIr
       # increment the current row numbers
       chunkNo = chunkNo+1
       original_row=original_row+1
-
-      # print(paste("original_row=",original_row))
 
       # assign the thread and sequence number
       e$threadNum[chunkNo] = thread
@@ -542,32 +530,38 @@ OccToEvents3 <- function(o, EventMapName,EVENT_CF, compare_CF,TN, CF, rx, KeepIr
 
 # new function for new tab
 # e is the event list
-# EventMapName is an input selected from the list of available mappings
 # cluster_method is either "Sequential similarity" or "Contextual Similarity" or "Network Structure"
-clusterEvents <- function(e, NewMapName, cluster_method, event_CF,what_to_return='cluster'){
+# TODO: handle cluster_method separately, then call "createEventMap"?
+
+# Rename to "createEventMap"?
+# TODO: don't pass in "EventMapName" here, and then add to list
+# just return the map, and have the called give it a name and explicitly add it
+clusterEvents <- function(e, cluster_method){
+
+	event_CF <- get_EVENT_CF()
 
 	# make sure to cluster on the correct column (one that exists...)
   	if (cluster_method=="Sequential similarity") {
 		dd <- dist_matrix_seq(e)
 	} else if (cluster_method=="Contextual Similarity") {
-		dd <- dist_matrix_context(e,event_CF) }
-  	else if (cluster_method=="Network Proximity") {
-
+		dd <- dist_matrix_context(e,event_CF)
+	} else if (cluster_method=="Network Proximity") {
     	# The focal column is used to trade the network.  It will probably only be present in the OneToOne mapping, but we should check more generally
     	# if it's not present, then use the highest granularity of zooming available.
-    	focalCol <- newColName(event_CF)
+    	focalCol <- paste0(event_CF,collapse="_")
 
-    	if (! focalCol %in% colnames(e)) {
-			focalCol <- paste0('ZM_',zoom_upper_limit(e))
+    	if(!focalCol %in% colnames(e)) {
+			zoom     <- as.integer(str_replace(colnames(e[max(grep("ZM_",colnames(e)))]),"ZM_",""))
+			focalCol <- paste0('ZM_',zoom)
 		}
 
     	dd <- dist_matrix_network(e,focalCol)
 	}
 
   	### cluster the elements
-  	clust <- hclust( dd,  method="ward.D2" )
+  	clust <- hclust(dd, method="ward.D2")
 
-  	######## need to delete the old ZM_ columns and append the new ones.  ###########
+	# delete old ZM columns
   	e[grep("ZM_",colnames(e))] <- NULL
 
   	# number of chunks is the number of rows in the distance matrix
@@ -586,24 +580,24 @@ clusterEvents <- function(e, NewMapName, cluster_method, event_CF,what_to_return
   	# need to handle differently for network clusters
  	# we are relying on "unique" returning values in the same order whenever it is called on the same data
   	if (cluster_method=="Network Proximity") {
-		merge_col_name       <- newColName(event_CF)
+		merge_col_name       <- paste0(event_CF,collapse="_")
     	zm[[merge_col_name]] <- unique(e[[merge_col_name]])
     	newmap               <-  merge(e, zm, by=merge_col_name)
 	} else {
 		newmap <- cbind(e, zm)
 	}
 
-  	# only  store the event map in the GlobalEventMappings if something is filled in
-  	if (!NewMapName=="")  {
-   		eventMap <- store_event_mapping(NewMapName,newmap)
-	}
+	# generate event map
+	# TODO: this should be returned
+	eventMap <- newmap[order(newmap[['threadNum']],newmap[['seqNum']]),]
 
-	# return the cluster solution for display
-  	if (what_to_return=='cluster') {
-		return(clust)
-	} else {
-		return(eventMap[['threads']])
-	}
+	# For now two different types of functions call this, so return both parts:
+	# TODO: split this function so the callers that need eventMap can get it
+	# and the caller that needs clust can also get it
+	results <- list(eventMap,clust)
+
+	return(results)
+
 }
 
 # this function pulls computes their similarity of chunks based on sequence
@@ -635,8 +629,6 @@ dist_matrix_network <- function(e,CF){
 
   # first get the nodes and edges
   n=threads_to_network_original(e,'threadNum',CF)
-
-  # print(paste('in dist_matrix_network, n=', n))
 
   # now get the shortest paths between all nodes in the graph
   d=distances(graph_from_data_frame(n$edgeDF),
@@ -676,6 +668,7 @@ make_event_df <- function(event_CF,compare_CF,N){
 # o is the dataframe of occurrences
 # CF is the context factor (column)
 # r is the row (occurrence number in the One-to-One mapping)
+# TODO: review where this is called -- not necessarily needed as function
 convert_CF_to_vector <- function(o,CF,r){
 
   return(as.integer((levels(o[[CF]]) ==o[[r,CF]])*1))
@@ -704,8 +697,6 @@ aggregate_VCF_for_event <- function(o, occList, cf){
   # start with the first one so the dimension of the vector is correct
   aggCF = convert_CF_to_vector(o, cf, unlist(occList)[1])
 
-   # print( aggCF)
-
   # now add the rest, if there are any
   if (length(unlist(occList)) > 1){
     for (idx in seq(2,length(unlist(occList)),1)){
@@ -724,12 +715,9 @@ aggregate_VCF_for_regex <- function(o, occList, cf){
   # start with the first one so the dimension of the vector is correct
   aggCF = unlist(o[unlist(occList)[1],VCF])
 
-  # print( aggCF)
-
   # now add the rest, if there are any
   if (length(unlist(occList)) > 1){
     for (idx in seq(2,length(unlist(occList)),1)){
-      # print( aggCF)
       aggCF = aggCF+unlist(o[[unlist(occList)[idx],VCF]])
     }}
   return(aggCF)
@@ -751,8 +739,6 @@ aggregate_VCF_for_cluster <- function(e, cf, eclust, zoom_col){
   # s =  e[ which(e[[zoom_col]]==eclust), VCF]   This version uses the
   s =  e[ which(as.integer(e[[zoom_col]])==eclust), VCF]
 
-  # print (s)
-  # print(paste("length(s)",length(s)))
   if ( is.null(unlist(s) ))
     return(NULL)
   else
