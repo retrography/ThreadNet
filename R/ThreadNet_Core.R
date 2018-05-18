@@ -146,11 +146,6 @@ ThreadOccByPOV <- function(threadData){
 		# Increment stage
     	incProgress(1/n)
 
-		# HOW DO WE KNOW WHICH IS FOR EVENT AND WHICH IS FOR THREAD?
-		# better way -- label columns as "Thread" and "Event" --> have content be combined values of the columns to include
-		# see where this is used later -- might not even be necessary here
-		# also since these are both the same code, could test first for >1 and if they are the same, then add new function to do this
-
 		threadPOV <- paste0(THREAD_CF,collapse="_")
 		eventPOV  <- paste0(EVENT_CF,collapse="_")
 
@@ -265,7 +260,6 @@ ThreadOccByPOV <- function(threadData){
 		# TODO: get what this returns without actually storing any events yet
 		# Need to add button on "Review Data" tab to explicitly name and add this to the list
     	e <- clusterEvents(occ, 'OneToOne', 'Network Proximity', EVENT_CF,'threads')
-
 
 		# Increment stage
     	incProgress(5/n)
@@ -423,8 +417,8 @@ OccToEvents_By_Chunk <- function(o, m, EventMapName, uniform_chunk_size, tThresh
 # this one creates events based on frequent ngrams or regular expressions
 OccToEvents3 <- function(o, EventMapName,TN, CF, rx, KeepIrregularEvents){
 
-	EVENT_CF <- get_EVENT_CF()
-    compare_CF <- get_COMPARISON_CF()
+  # Only run if eventMapName is filled in
+  if (EventMapName =="") {return(data.frame()) }
 
   # keep track of the length of each pattern
   for (i in 1:nrow(rx))
@@ -634,33 +628,142 @@ dist_matrix_network <- function(e,CF){
   return( as.dist(d) )
 }
 
+# new data structure for events (BTP 3/28)
+make_event_df <- function(event_CF,compare_CF,N){
 
-net_adj_matrix <- function(edges){
+  # Make a data frame with columns for each CF, and put one vector into each column
+  e = data.frame(
+    tStamp = numeric(N),  # this is the event start time
+    eventDuration = numeric(N),
+    label = character(N),
+    occurrences = integer(N),
+    threadNum = integer(N),
+    seqNum = integer(N))
 
-  return(as_adj(graph_from_edgelist(as.matrix(edges))))
+  # add columns for each of the context factors used to define events
+  # first make the dataframes for each
+  cf1v=setNames(data.frame(matrix(ncol = length(event_CF), nrow = N)), paste0("V_",event_CF))
+  cf2=setNames(data.frame(matrix(ncol = length(compare_CF), nrow = N)), compare_CF)
+
+  # Then combine them
+  e = cbind(e, cf2,cf1v)
+
+  # and add one more column for the event code/description -- maybe use label instead of this?
+  e$ZM_1 = character(N)
+
+  return(e)
+}
+
+# this will convert the context factor into a list (like this: 0 0 0 0 0 0 0 0 1 0 0)
+# o is the dataframe of occurrences
+# CF is the context factor (column)
+# r is the row (occurrence number in the One-to-One mapping)
+convert_CF_to_vector <- function(o,CF,r){
+
+  return(as.integer((levels(o[[CF]]) ==o[[r,CF]])*1))
 
 }
 
-# new data structure for events
-make_event_df <- function(event_CF,compare_CF,N){
 
-  	# Make a data frame with columns for each CF, and put one vector into each column
-  	e <- data.frame(
-    	tStamp        = numeric(N),  # this is the event start time
-    	eventDuration = numeric(N),
-    	label         = character(N),
-    	occurrences   = integer(N),
-    	threadNum     = integer(N),
-    	seqNum        = integer(N)
-	)
+# Aggregate the VCF (CF vector) for that CF
+# There are two layers to this.
+# 1) aggregate_VCF_for_event
+#   Within an single event, aggregate the VCF for the occurrences that make up that event.
+#   This function will only get used when creating from the fuctions that convert occurrences to events
+# 2) aggregate_VCF_for_cluster
+#   For a cluster level, aggregate the events at that cluster level (e.g., ZM_n)
+#   This function will work on any event, even the one_to_one mapping.
+#
+# o is a dataframe of occurrences.  The values of V_ (the VCF) does not have to be filled in.  It gets re-computed here for each occurrence.
+# occlist is the list of occurrences of that event (e$occurrences)
+# cf is the name of the contextual factor to create the VCF
+
+aggregate_VCF_for_event <- function(o, occList, cf){
+
+  # get the column name for the VCF
+  VCF = paste0("V_",cf)
+
+  # start with the first one so the dimension of the vector is correct
+  aggCF = convert_CF_to_vector(o, cf, unlist(occList)[1])
+
+   # print( aggCF)
+
+  # now add the rest, if there are any
+  if (length(unlist(occList)) > 1){
+    for (idx in seq(2,length(unlist(occList)),1)){
+      aggCF = aggCF + convert_CF_to_vector(o, cf, unlist(occList)[idx])
+    }}
+  return(aggCF)
+}
+
+# this version  assumes that the VCF is already computed.
+# Might come in handy, but it's not correct...
+aggregate_VCF_for_regex <- function(o, occList, cf){
+
+  # get the column name for the VCF
+  VCF = paste0("V_",cf)
+
+  # start with the first one so the dimension of the vector is correct
+  aggCF = unlist(o[unlist(occList)[1],VCF])
+
+  # print( aggCF)
+
+  # now add the rest, if there are any
+  if (length(unlist(occList)) > 1){
+    for (idx in seq(2,length(unlist(occList)),1)){
+      # print( aggCF)
+      aggCF = aggCF+unlist(o[[unlist(occList)[idx],VCF]])
+    }}
+  return(aggCF)
+}
+
+# Same basic idea, but works on a set of events within a cluster, rather than a set of occurrences within an event
+# so you get get a subset of rows, convert to a matrix and add them up
+# e holds the events
+# cf holds a single contextual factor, so you need to call this in a loop
+# zoom_col and z are used to subset the data.  They could actually be anything.
+aggregate_VCF_for_cluster <- function(e, cf, eclust, zoom_col){
+
+  # get the column name for the VCF
+  VCF = paste0("V_",cf)
+
+  # get the matrix for each
 
  	# add columns for each of the context factors used to define events
   	# first make the dataframes for each
   	cf1v <- setNames(data.frame(matrix(ncol = length(event_CF),   nrow = N)), paste0("V_",event_CF))
   	cf2  <- setNames(data.frame(matrix(ncol = length(compare_CF), nrow = N)), compare_CF)
 
-  	# Then combine them
-  	e <- cbind(e, cf2,cf1v)
+  # print (s)
+  # print(paste("length(s)",length(s)))
+  if ( is.null(unlist(s) ))
+    return(NULL)
+  else
+    return( colSums( matrix( unlist(s), nrow = length(s), byrow = TRUE) ))
+}
+
+# this one takes the whole list
+VCF_matrix <- function(e, vcf ){
+
+  m = one_vcf_matrix(e, vcf[1] )
+
+  if (length(vcf)>1){
+    for (idx in seq(2,length(vcf),1)){
+      m = cbind( m, one_vcf_matrix(e, vcf[idx] ) )
+    }}
+  return(m)
+}
+
+# this one takes a single column as an argument
+one_vcf_matrix <- function(e, vcf){
+  return(  matrix( unlist( e[[vcf]] ), nrow = length( e[[vcf]] ), byrow = TRUE)  )
+}
+
+
+# this is used for the regex pages to show the threads.
+# similar code is used in count_ngrams and to make networks, but with different delimiters
+# and with a minimum sequence length (ngram size), but this can be filtered after this function3
+thread_text_vector <- function(o, TN, CF, delimiter){
 
   	# and add one more column for the event code/description -- maybe use label instead of this?
   	e$ZM_1 <- character(N)
