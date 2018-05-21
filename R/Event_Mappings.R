@@ -6,14 +6,8 @@
 # Absolutely no warranty!
 ##########################################################################################################
 
-#####################################################
-# GlobalEventMappings is a global variable
-
-# This software may be used according to the terms provided in the
-# GNU General Public License (GPL-3.0) https://opensource.org/licenses/GPL-3.0?
-# Absolutely no warranty!
-##########################################################################################################
-
+# Checks the name attempting to be create against the list of
+# map names in memory and forces the creation of a new name.
 # TODO: deprecate this function when no longer needed
 check_map_name <- function(mapname){
 
@@ -30,7 +24,7 @@ get_event_mapping_name_list <- function() {
   return(n)
 }
 
-store_event_mapping <- function(EventMapName, EventMap){
+store_event_mapping <- function(EventMapName, e){
 
 	# TODO: do validation here
 
@@ -38,18 +32,20 @@ store_event_mapping <- function(EventMapName, EventMap){
 	# Validate that the EventMapName is not already in the list
 	# Validate that the eventMap itself is not identical to anything already in the list (? -- confirm with Brian if this check is necessary)
 
-	# TODO: do validation here
-
-	# Validate the there is an actual EventMapName supplied (no blanks)
-	# Validate that the EventMapName is not already in the list
-	# Validate that the eventMap itself is not identical to anything already in the list (? -- confirm with Brian if this check is necessary)
-
-  # Add the mapping to the global list of mappings. Sort by threadNum and seqNum
-  em = list(name = paste(EventMapName), threads = e[order(e[['threadNum']],e[['seqNum']]),])
+  	# Add the mapping to the global list of mappings. Sort by threadNum and seqNum
+  	em <- list(name = paste(EventMapName), threads = e[order(e[['threadNum']],e[['seqNum']]),])
 
   	GlobalEventMappings <<- append(list(em), GlobalEventMappings )
 
 	# TODO: return ok/fail
+}
+
+get_event_index <- function(mapname) {
+
+	idx <- which(mapname==get_event_mapping_name_list() )
+
+	return(idx)
+
 }
 
 get_event_mapping_threads <- function(mapname){
