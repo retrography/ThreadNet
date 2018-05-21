@@ -255,6 +255,10 @@ server <- shinyServer(function(input, output, session) {
 	  get_event_mapping_threads( input$SelectSubsetMapInputID )
 	    })
 
+	#####################
+	# Manage Event Maps #
+	#####################
+
 	# reactive functions for the export and delete buttons
 	observeEvent(input$DeleteMappingButton,{
 		rv$newmap <- rv$newmap+1 # trigger reactive value
@@ -263,7 +267,7 @@ server <- shinyServer(function(input, output, session) {
 	}, ignoreInit = TRUE)
 
 	observeEvent(input$ExportMappingRData,{
-		export_event_mapping(input$ManageEventMapInputID )
+		export_event_mapping_rdata(input$ManageEventMapInputID )
 		output$action_confirm <- renderText(paste(input$ManageEventMapInputID, " exported as .RData file"))
 	})
 
