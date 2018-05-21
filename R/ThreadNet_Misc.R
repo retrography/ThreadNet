@@ -387,17 +387,19 @@ dist_matrix_context <- function( e, CF ){
 }
 
 # this function computes their similarity of chunks based on network
-dist_matrix_network <- function(e,CF){
+dist_matrix_network <- function(e,CF) {
 
-  # first get the nodes and edges
-  n=threads_to_network_original(e,'threadNum',CF)
+  	# first get the nodes and edges
+  	n <- threads_to_network_original(e,'threadNum',CF)
 
-  # now get the shortest paths between all nodes in the graph
-  d=distances(graph_from_data_frame(n$edgeDF),
-              v=n$nodeDF[['label']],
-              to=n$nodeDF[['label']])
+  	# now get the shortest paths between all nodes in the graph
+  	d <- distances(
+		graph_from_data_frame(n$edgeDF),
+    	v  = n$nodeDF[['label']],
+    	to = n$nodeDF[['label']]
+	)
 
-  return( as.dist(d) )
+  	return( as.dist(d) )
 }
 
 #######################
