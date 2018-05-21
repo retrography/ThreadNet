@@ -11,7 +11,7 @@
 # takes the output from the function that maps threads to networks
 #' Estimates the number of paths in a directed graph
 #'
-#' This function takes a network descripts (nodes and edges, as generaged by the functino threads_to_network, and estimates the number of paths.
+#' This function takes a network descripts and estimates the number of paths.
 #' as described in Haerem, Pentland and Miller (2015). The estimate correlates with the McCabe's (1975) cyclometric complexity.
 #'
 #' @family ThreadNet_Metrics
