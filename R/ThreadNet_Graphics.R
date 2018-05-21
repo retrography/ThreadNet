@@ -166,7 +166,6 @@ CF_multi_pie_event <- function(o, e,CF,r, zm){
   return(pies)
 }
 
-
 ######################################################################
 # ThreadMap shows the threads in a horizongal layout
 #' Shows threads in a horizontal layout
@@ -185,10 +184,6 @@ CF_multi_pie_event <- function(o, e,CF,r, zm){
 #' @export
 #'
 threadMap <- function(or, TN, timescale, CF, shape){
-
-
-  # print('in threadMap')
-  # print(head(or))
 
   # setting color palettes
   # first find the number of distinct colors
@@ -217,7 +212,6 @@ threadMap <- function(or, TN, timescale, CF, shape){
         )
 }
 
-
 ################################################
 #' Create an ngram bar chart
 #'
@@ -239,9 +233,6 @@ ng_bar_chart <- function(o,TN, CF, n, mincount){
 
   # get the ngrams
   ngdf = count_ngrams(o,TN, CF, n)
-
-  # print("ngdf")
-  # print(ngdf)
 
   # put them in descending order -- tricky (http://stackoverflow.com/questions/40224892/r-plotly-barplot-sort-by-value)
   ngdf$ngrams = factor(ngdf$ngrams, levels =unique(ngdf$ngrams)[order(ngdf$freq, decreasing = TRUE)])
@@ -270,7 +261,6 @@ ng_bar_chart_freq <- function(ngdf){
 
   return(ngp)
 }
-
 
 #############################################################################
 #' Circular network layout for event network (USES visnetwork)
@@ -418,8 +408,6 @@ Comparison_Plots <- function(e, o, CF, CF_levels, nTimePeriods=1,  plot_type,rol
       # then make the subplots
       # this gets all of the events in all of the threads that match the criteria
       dfp= e[is.element(e$threadNum,unlist(plot_bucket)),]
-      # print("dfp[,1:7]")
-      # print(dfp[,1:7])
 
       # ideally make sure at least one thread is long enough to do an ngram...
       if (nrow(dfp)>2){
@@ -441,8 +429,6 @@ Comparison_Plots <- function(e, o, CF, CF_levels, nTimePeriods=1,  plot_type,rol
   return(subplot(plot_list,nrows=nLevels))
 }
 
-
-
 # This one is not currently used.
 threadLengthBarchart <- function(o, TN){
 
@@ -455,22 +441,13 @@ threadLengthBarchart <- function(o, TN){
   return(tgbc)
 }
 
-
-
-# Basic Network layout - back from the dead
-# accepts the data stucture with nodeDF and edgeDF created by threads_to_network and normalNetwork
+# Basic Network layout
 circleVisNetwork <- function( n,showTitle=FALSE ){
 
   if (showTitle==TRUE)
     title_phrase = paste("Estimated complexity index =",round(estimate_network_complexity(n),2))
   else
     title_phrase =''
-
-  # print("nodes")
-  # print(n$nodeDF)
-  #
-  # print("edges")
-  # print(n$edgeDF)
 
   return(visNetwork(n$nodeDF, n$edgeDF, width = "100%", main=title_phrase) %>%
            visEdges(arrows ="to",
@@ -486,7 +463,6 @@ circleVisNetwork <- function( n,showTitle=FALSE ){
 
 }
 
-
 # e is any set of events
 # vcf is the context factor to graph as network for that set of events
 # l is the set of labels = factor levels of original data for that VCF
@@ -495,9 +471,6 @@ normalNetwork <- function(e, o, cf){
   # First get the node names & remove the spaces just in case
   node_label = levels(o[[cf]])
   node_label=str_replace_all(node_label," ","_")
-
-  # print("node_label")
-  # print(node_label)
 
   # set up the data frames we need to draw the network
   nodes = data.frame(
@@ -515,10 +488,9 @@ normalNetwork <- function(e, o, cf){
   a=sqrt(vcf_sum %o% vcf_sum)
   a=a/max(a)
 
-  # print(a)
   g=graph_from_adjacency_matrix(a, mode='undirected', weighted=TRUE)
 
-  #E = get.edgelist(g, attr='weight')
+  # E = get.edgelist(g, attr='weight')
   edges=cbind( get.edgelist(g) , round( E(g)$weight, 3 ))
 
   colnames(edges)=c('from','to','label')
@@ -529,12 +501,8 @@ normalNetwork <- function(e, o, cf){
 
 
 filter_network_edges <- function(n, threshold){
-  # print(head(n$edgeDF))
-  # print(paste('threshold=',threshold))
 
   n$edgeDF = n$edgeDF %>% filter(label>threshold)
-
-  # print(head(n$edgeDF))
 
   return(n)
 }
