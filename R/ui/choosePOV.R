@@ -1,12 +1,17 @@
 # UI: Choose POV tab definitions
 
 tabPanel(
+
 	value = "choosePOV",
+
     "Choose POV",
-    helpText('Select columns from your data to define your point of view. You MUST click on either Preview Threads or Preview Data before proceeding.'),
+
     tags$hr(),
+
     tabsetPanel(
+
         id = "tabs",
+
         tabPanel(
 			value = "defineThreads",
             "Define Threads",
@@ -14,6 +19,7 @@ tabPanel(
             uiOutput("povThreadSelector"),
             plotlyOutput("ContextFlowers_Threads")
         ),
+
         tabPanel(
 			value = "defineEvents",
             "Define Events",
@@ -21,11 +27,19 @@ tabPanel(
             uiOutput("povEventSelector"),
             plotlyOutput("ContextFlowers_Events")
         ),
+
         tabPanel(
 			value = "showThreads",
             "Review Data",
-            tags$h4("This table shows the data threaded from your chosen POV"),
+            tags$h4("This table shows the data threaded from your chosen POV."),
             DT::dataTableOutput("povDataThreads")
-        )
+        ),
+
+		tabPanel(
+			value = "saveThreads",
+			"Save Data",
+			tags$h4("Save this dataset to continue."),
+			uiOutput("addPOV")
+		)
     )
 )
