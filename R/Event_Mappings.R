@@ -24,7 +24,7 @@ get_event_mapping_name_list <- function() {
   return(n)
 }
 
-store_event_mapping <- function(EventMapName, e){
+store_event_mapping <- function(EventMapName, EventMap){
 
 	# TODO: do validation here
 
@@ -33,7 +33,8 @@ store_event_mapping <- function(EventMapName, e){
 	# Validate that the eventMap itself is not identical to anything already in the list (? -- confirm with Brian if this check is necessary)
 
   	# Add the mapping to the global list of mappings. Sort by threadNum and seqNum
-  	em <- list(name = paste(EventMapName), threads = e[order(e[['threadNum']],e[['seqNum']]),])
+	# TODO: does this need to be sorted?
+  	em <- list(name = paste(EventMapName), threads = EventMap[order(EventMap[['threadNum']],EventMap[['seqNum']]),])
 
   	GlobalEventMappings <<- append(list(em), GlobalEventMappings )
 
