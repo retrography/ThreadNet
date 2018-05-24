@@ -258,11 +258,10 @@ ThreadOccByPOV <- function(threadData){
 		# return events with network cluster added for zooming...
 		# NOTE: no eventmap stored here any more
 		# TODO: Need to add button on "Review Data" tab to explicitly name and add this to the list
+		# e contains eventMap and clust from clusterEvents
     	e <- clusterEvents(occ, 'Network Proximity')
 
 		results <- e[[1]] # [1] to get the eventMap
-
-		# NOTE: "e" is just the threads that were created; need to explicitly give it a name and add it to the map list
 
 		# Increment stage
     	incProgress(5/n)
