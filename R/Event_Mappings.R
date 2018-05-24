@@ -34,9 +34,12 @@ store_event_mapping <- function(EventMapName, EventMap){
 
   	# Add the mapping to the global list of mappings. Sort by threadNum and seqNum
 	# TODO: does this need to be sorted?
-  	em <- list(name = paste(EventMapName), threads = EventMap[order(EventMap[['threadNum']],EventMap[['seqNum']]),])
+  	#em <- list(name = paste(EventMapName), threads = EventMap[order(EventMap[['threadNum']],EventMap[['seqNum']]),])
+	threads <- EventMap[order(EventMap[['threadNum']],EventMap[['seqNum']]),] # TODO: is this necessary?
 
-  	GlobalEventMappings <<- append(list(em), GlobalEventMappings )
+	newEntry <- data.frame(Name=EventMapName,Map=threads)
+
+  	GlobalEventMappings <<- rbind(GlobalEventMappings,newEntry)
 
 	# TODO: return ok/fail
 }

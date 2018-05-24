@@ -45,4 +45,4 @@ source("Event_Mappings.R")
 source("NGrams.R")
 
 # store event mappings
-GlobalEventMappings <- list()
+GlobalEventMappings <- setNames(data.frame(matrix(ncol = 2, nrow = 0)), c("Name", "Map"))
