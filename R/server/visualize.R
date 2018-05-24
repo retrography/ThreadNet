@@ -125,7 +125,9 @@ output$forceNetworkD3 <- renderForceNetwork({
 	forceNetworkD3(n)
 })
 
-# TODO: review threadedOcc() call -- this function is to be deprecated
+# TODO: review threadedOcc() call -- why is this being called here?
+# we should be using an already saved dataset
+# ie threadedOcc() was already called to generate the initial POV
 output$networkPie <- renderPlotly({
 	req(input$Group)
 	get_group <- input$Group
