@@ -91,10 +91,9 @@ server <- shinyServer(function(input, output, session) {
 	selectOcc <- reactive(occ()[c("tStamp", input$CFcolumnsID)] )
 
 	# select all rows using the nice DT input
-	selectOccFilter <- reactive(selectOcc()[input$dataFilter_rows_all,])
+	# global for general use -- check what else calls this if anything
+	selectOccFilter <<- reactive(selectOcc()[input$dataFilter_rows_all,])
 
-	# Keeping this function here for now because it is still called in visualize
-	# however this function is deprecated and should be removed when no longer needed
 	threadedOcc <- reactive({
 
 		# don't call ThreadedOccByPOV unless inputs have been defined
@@ -102,8 +101,19 @@ server <- shinyServer(function(input, output, session) {
 		validate(need(input$EVENT_CF_ID  != "", "You must select at least one Event"))
 
 		# we have inputs: call the fuction to thread occurences by selected POV
-		ThreadOccByPOV(selectOccFilter())
+		initialPOV <- ThreadOccByPOV(selectOccFilter())
 	})
+
+	# Create the initial POV map name
+	# TODO: there are numerous buttons that add a new event -- this can be made more generic
+	# TODO: test w/ validation on the function side (submitted name cannot be blank, or already exist in the list)
+	observeEvent(input$addPOVButton, {
+
+		rv$newmap <- rv$newmap+1 # trigger reactive value
+		isolate(
+			store_event_mapping(input$POVMapName, threadedOcc()) # this is the name; need to get object to add
+		)
+	}, ignoreInit = TRUE)
 
 	#########################################
 
