@@ -47,7 +47,7 @@ source("NGrams.R")
 # store event mappings
 GlobalEventMappings <- setNames(data.frame(matrix(ncol = 2, nrow = 0)), c("Name", "Map"))
 
-# fix for OS X time zone bug
+# fix for OS X time zone bug -- should go in .Rprofile, I think
 # setme <-
 #   "Sys.setenv(TZ='America/New_York') #some default not get any errors
 # invisible(loadNamespace('rgeolocate'))
