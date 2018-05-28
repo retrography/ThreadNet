@@ -48,13 +48,13 @@ source("NGrams.R")
 GlobalEventMappings <- setNames(data.frame(matrix(ncol = 2, nrow = 0)), c("Name", "Map"))
 
 # fix for OS X time zone bug
-setme <-
-  "Sys.setenv(TZ='America/New_York') #some default not get any errors
-invisible(loadNamespace('rgeolocate'))
-invisible(loadNamespace('httr'))
-mytz <- rgeolocate::ip_api(httr::content(httr::GET('https://api.ipify.org?format=json'))[1])[['timezone']]
-Sys.setenv(TZ=mytz)"
-
-cat(setme,file=file.path(R.home(),'etc/Rprofile.site'),sep='\n')
+# setme <-
+#   "Sys.setenv(TZ='America/New_York') #some default not get any errors
+# invisible(loadNamespace('rgeolocate'))
+# invisible(loadNamespace('httr'))
+# mytz <- rgeolocate::ip_api(httr::content(httr::GET('https://api.ipify.org?format=json'))[1])[['timezone']]
+# Sys.setenv(TZ=mytz)"
+#
+# cat(setme,file=file.path(R.home(),'etc/Rprofile.site'),sep='\n')
 
 
